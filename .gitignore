@@ -1,5 +1,5 @@
 # Secrets and Configuration
-src/config/secrets.py
+/src/config/secrets.py
 .env
 
 # Python
