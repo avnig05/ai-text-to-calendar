@@ -1,14 +1,11 @@
-from flask import Flask
+from flask import Flask, request
 
 app = Flask(__name__)
 
 
-@app.route('/testing')
-def hello():
-    return {'date': '1/28/2025'}
-
-@app.route('/testing2')
-def hello2():
-    return '<h1>Hello, There! 2</h1>'
+@app.route('/add-to-calendar', methods=["POST"])
+def add_to_calendar():
+    request_data = request.data
+    return request_data
 
 app.run(debug=True)
