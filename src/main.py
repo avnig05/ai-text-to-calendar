@@ -1,11 +1,16 @@
-from flask import Flask, request
+from fastapi import FastAPI
+from pydantic import BaseModel
 
-app = Flask(__name__)
+class CalendarRequest(BaseModel):
+    event_body: str
+    platform: str
 
+app = FastAPI()
 
-@app.route('/add-to-calendar', methods=["POST"])
-def add_to_calendar():
-    request_data = request.data
-    return request_data
+@app.get("/")
+async def root():
+    return {"message": "hello world"}
 
-app.run(debug=True)
+@app.post("/add-to-calendar")
+async def add_to_calendar(item: CalendarRequest):
+    return item
