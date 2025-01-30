@@ -5,8 +5,8 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class Event(BaseModel):
-    title: Optional[str] = "No Title"
-    start_time: Optional[datetime] = None
+    title: str = "No Title"
+    start_time: datetime = None
     end_time: Optional[datetime] = None
     description: Optional[str] = None
     location: Optional[str] = None

@@ -4,6 +4,10 @@ from models.event import Event
 from utils.date_parser import parse_datetime
 from openai import OpenAI
 import json
+import logging
+from pydantic import ValidationError
+
+logging.basicConfig(level=logging.ERROR)  # Configure logging
 
 class TextToEventParser:
     def __init__(self):
@@ -11,44 +15,95 @@ class TextToEventParser:
     
     def parse_text(self, text: str) -> Event:
         # send request to OpenAI API to extract event details into a JSON object
-        response = self.client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {
-                "role": "system",
-                "content": """You are a backend NLP model that extracts structured event details from text. 
-                Specifically, extract and return into a json format the following fields:
-                
-                - title: str
-                - start_time: datetime
-                - end_time: datetime
-                - description: Optional[str] 
-                - location: Optional[str] 
-                - attendees: Optional[List[str]] 
-                - is_recurring: bool 
-                - recurrence_pattern: Optional[str] 
+        try:
+            # get current time up to the minute for relative date calculations
+            current_time = datetime.now().strftime("%Y-%m-%d %H:%M")  # Format as YYYY-MM-DD HH:MM        print("sending request to OpenAI API: ", text)
+            print("sending request to OpenAI API: ", text)
+            print("current time is: ", current_time)
+            print()
+            response = self.client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {
+                    "role": "system",
+                    "content": f"""You are an AI that extracts structured event details from text. 
+                    The current time is: **{current_time}**. Use this to interpret relative dates.
 
-                If you cannot find details for a specific field, return None for that field.
-                Ensure that the extracted values are accurate and in the correct format."""
-            },
-            {"role": "user", "content": text}
-        ],
-        response_format={'type': "json_object"}
-        )
+                    - If a date is relative (e.g., "tomorrow at 2pm"), convert it into an absolute datetime based on the current time.
+                    - If a date is given without a time (e.g., "March 15"), assume **the time is 00:00 (midnight)**.
+                    - If only a time is given (e.g., "at 2pm"), assume **it refers to today** unless the event is clearly in the future.
+
+                    Extract and return in JSON format:
+                    
+                    - title: str
+                    - start_time: ISO 8601 datetime format (e.g., "2025-01-30T14:00")
+                    - end_time: ISO 8601 datetime format (e.g., "2025-01-30T14:00")
+                        -- if the end time is not specified, use context to make a best guess and assume that either the event is 1 hour long or is an all-day event ending at 23:59.
+                        -- if the end time is specified without a date, assume it has the same date as the start time.
+                        -- if the date is given without a time, assume the event is an all-day event and ends at 23:59 on that date.
+                        -- if the duration is specified, calculate the end time based on the start time.
+                    - description: Optional[str] 
+                        -- if any links are provided, include them in the description. with a quick summary of what they are.
+                    - location: Optional[str] 
+                    - attendees: Optional[List[str]] 
+                        -- if any email addresses are provided, include them in the attendees list.
+                    - is_recurring: bool 
+                        -- if the event is recurring, set this to true. and provide the recurrence pattern, if the pattern is not specified, assume it's a daily event.
+                        -- if the recurrence is not specified, assume it's a one-time event.
+                    - recurrence_pattern: Optional[str] 
+
+                    If any field is missing, return null.
+                    """
+                },
+                {"role": "user", "content": text}
+            ],
+            response_format={'type': "json_object"}
+            )
+        except ConnectionError as ce:
+            logging.error("Connection error while sending request to OpenAI API: %s", ce)
+            return "A connection error occurred while communicating with OpenAI API. Please check your internet connection."
+
+        except ValueError as ve:
+            logging.error("Invalid input or response from OpenAI: %s", ve)
+            return "An error occurred due to an invalid input or response from OpenAI API."
+
+        except Exception as e:
+            logging.error("Unexpected error: %s", e)
+            return f"An unexpected error occurred: {e}"
+            
+        #debugging
+        # print("response from OpenAI API: ", response)
+        print("response from OpenAI API: ", response.choices[0].message.content)
+        print()
         
-        event_data =json.loads(response.choices[0].message.content)
-        
-        event = Event(
+        try:
+            event_data = json.loads(response.choices[0].message.content)
+
+            # Ensure required fields exist
+            if not event_data.get("title") or not event_data.get("start_time"):
+                raise ValueError("Missing required fields: 'title' and/or 'start_time'")
+
+            # Create Event object
+            event = Event(
                 title=event_data.get("title"),
-                # start_time=parse_datetime(event_data.get("start_time")),
-                start_time=event_data.get("start_time"),
-                # end_time=parse_datetime(event_data.get("end_time")),
-                end_time=event_data.get("end_time"),
+                start_time=parse_datetime(event_data.get("start_time")),  # Convert to datetime
+                end_time=parse_datetime(event_data.get("end_time")),
                 description=event_data.get("description"),
                 location=event_data.get("location"),
-                attendees=event_data.get("attendees", []),  # Defaults to empty list
+                attendees=event_data.get("attendees", []),
                 is_recurring=event_data.get("is_recurring", False),
                 recurrence_pattern=event_data.get("recurrence_pattern")
-                )        
+            )
 
+        except ValueError as ve:
+            print(f"Error: {ve}")  # Log missing field errors
+            return f"Invalid event data: {ve}"
+
+        except ValidationError as ve:
+            print(f"Pydantic Validation Error: {ve}")
+            return f"Event data validation failed: {ve}"
+
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            return f"An unexpected error occurred: {e}"
         return event
