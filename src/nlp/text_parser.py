@@ -1,18 +1,34 @@
-# import spacy
+# Standard library imports
 from datetime import datetime
-import tzlocal as tz
-from src.models.event import Event
-from src.utils.date_parser import parse_datetime
-from openai import OpenAI
 import json
 import logging
+import os
+import traceback
+
+# Third-party imports
+from dotenv import load_dotenv
+from openai import OpenAI
 from pydantic import ValidationError
+import tzlocal as tz
+
+# Local application imports
+from models.event import Event
+from utils.date_parser import parse_datetime
 
 logging.basicConfig(level=logging.ERROR)  # Configure logging
 
 class TextToEventParser:
     def __init__(self):
-        self.client = OpenAI()
+        # Load the .env file
+        load_dotenv()
+
+        # Get the API key
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("API key not found. Make sure you have a .env file with OPENAI_API_KEY set.")
+
+        # Initialize OpenAI client with API key
+        self.client = OpenAI(api_key=api_key)
     
     def parse_text(self, text: str) -> Event:
         # send request to OpenAI API to extract event details into a JSON object
@@ -41,11 +57,11 @@ class TextToEventParser:
 
                     Extract and return in JSON format:
                     
-                    - title: str
-                    - start_time: ISO 8601 datetime format (e.g., "20250130T232000") but only accurate to the minute, set seconds to 00 
-                    - time_zone: str, representing the timezone of the event eg: "America/Los_Angeles"
+                    - title: str **a title is required never leave it null**
+                    - start_time: ISO 8601 datetime format (e.g., "20250130T232000") but only accurate to the minute, set seconds to 00 **a starttime is required never leave it null** 
+                    - time_zone: str, representing the timezone of the event eg: "America/Los_Angeles" **a timezone is required never leave it null**
                         -- default to none if not specified.
-                    - end_time: ISO 8601 datetime format (e.g., "20250130T232000") but only accurate to the minute, set seconds to 00
+                    - end_time: ISO 8601 datetime format (e.g., "20250130T232000") but only accurate to the minute, set seconds to 00 **an endtime is required never leave it null**
                         -- if the end time is not specified, use context to make a best guess and assume that either the event is 1 hour long or is an all-day event ending at 23:59.
                         -- if the end time is specified without a date, assume it has the same date as the start time.
                         -- if the date is given without a time, assume the event is an all-day event and ends at 23:59 on that date.
@@ -79,6 +95,8 @@ class TextToEventParser:
             ],
             response_format={'type': "json_object"}
             )
+            
+        # catch any errors gracefully
         except ConnectionError as ce:
             logging.error("Connection error while sending request to OpenAI API: %s", ce)
             return "A connection error occurred while communicating with OpenAI API. Please check your internet connection."
@@ -96,6 +114,8 @@ class TextToEventParser:
         print("response from OpenAI API: ", response.choices[0].message.content)
         print()
         
+        
+        # Parse the response from OpenAI API into a JSON object
         try:
             event_data = json.loads(response.choices[0].message.content)
 
@@ -103,32 +123,37 @@ class TextToEventParser:
             if not event_data.get("title") or not event_data.get("start_time"):
                 raise ValueError("Missing required fields: 'title' and/or 'start_time'")
 
-            # Create Event object
+            # Create Event object by parsing Json fields
             event = Event(
                 title=event_data.get("title"),
                 start_time=parse_datetime(event_data.get("start_time")),  # Convert to datetime
                 time_zone=str(current_time_zone) if not event_data.get("time_zone") else event_data.get("time_zone"),
                 end_time=parse_datetime(event_data.get("end_time")),
-                description=event_data.get("description"),
-                location=event_data.get("location"),
+                description=event_data.get("description", " "),
+                location=event_data.get("location", " "),
                 attendees=event_data.get("attendees", []),
                 is_recurring = event_data.get("is_recurring", False),
                 recurrence_pattern = event_data.get("recurrence_pattern"),
                 recurrence_days = event_data.get("recurrence_days"),
                 recurrence_count = event_data.get("recurrence_count"),
-                recurrence_end_date = parse_datetime(event_data.get("recurrence_end_date"))
-                
+                recurrence_end_date = parse_datetime(event_data.get("recurrence_end_date")) if event_data.get("recurrence_end_date") else None
             )
-
+            
+        # Catch any errors gracefully
         except ValueError as ve:
-            print(f"Error: {ve}")  # Log missing field errors
+            logging.error("ValueError: %s", ve, exc_info=True)
+            print(f"Error: {ve}")  # Log to console for debugging
             return f"Invalid event data: {ve}"
 
         except ValidationError as ve:
+            logging.error("Pydantic Validation Error: %s", ve, exc_info=True)
             print(f"Pydantic Validation Error: {ve}")
             return f"Event data validation failed: {ve}"
 
         except Exception as e:
-            print(f"Unexpected error: {e}")
-            return f"An unexpected error occurred: {e}"
+            error_trace = traceback.format_exc()  # Capture full stack trace
+            logging.error("Unexpected Error: %s\n%s", e, error_trace)
+            print(f"Unexpected error: {e}\n{error_trace}")
+            return "An unexpected error occurred. Please check the logs."
+
         return event

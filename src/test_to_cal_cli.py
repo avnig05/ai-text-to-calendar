@@ -38,6 +38,8 @@ def use_user_input(text):
         gcal_link = parsed_event.get_gcal_link()
         print(f"Google Calendar Link: {gcal_link}")
         print()
+        print("saving event to ics file...")
+        parsed_event.write_to_icalevent("test.ics")
     except Exception as e:
         print(f"An error occurred: {e}")
         return
@@ -47,7 +49,7 @@ if __name__ == "__main__":
     # test_parse_text()
     # print("Tests completed.")
     while True:
-        print("getting event from user input...")
+        print("\ngetting event from user input...")
         userin = input("Enter an event: ")
         if userin == "exit" or userin == "q":
             break
