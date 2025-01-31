@@ -20,10 +20,13 @@ class TextToEventParser:
             # get current time up to the minute for relative date calculations
             current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # Format as YYYY-MM-DD HH:MM:SS       print("sending request to OpenAI API: ", text)
             current_time_zone = tz.get_localzone()
-            print("sending request to OpenAI API: ", text)
+            print("\nsending request to OpenAI API: ", text)
+            print()
             print("current time is: ", current_time)
             print(f"Current Timezone: {current_time_zone}")
             print()
+            
+            print("\nwaiting on response from OpenAI API...")
             response = self.client.chat.completions.create(
             model="gpt-4o",
             messages=[

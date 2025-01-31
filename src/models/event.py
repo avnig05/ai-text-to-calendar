@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel
+import utils.date_parser as dp
 
 
 class Event(BaseModel):
@@ -19,6 +20,18 @@ class Event(BaseModel):
     recurrence_end_date: Optional[datetime] = None
     
     def write_to_icalevent(self, file_name):
+        # BEGIN:VCALENDAR
+        # VERSION:2.0
+        # BEGIN:VEVENT
+        # UID:2025-01-31T01:10:12.281Z@example.com
+        # DTSTAMP:20250131T011012Z
+        # DTSTART:20250130T232000Z
+        # DTEND:20250131T005500Z
+        # SUMMARY:AM 112 - Intro to PDEs Lecture
+        # DESCRIPTION:Course Title: AM 112 - Intro to PDEs, Instructor: Hongyun Wang.
+        # LOCATION:Porter Acad 144
+        # END:VEVENT
+        # END:VCALENDAR
         with open(file_name, 'w') as f:
             f.write("BEGIN:VCALENDAR\n")
             f.write("VERSION:2.0\n")
@@ -40,26 +53,8 @@ class Event(BaseModel):
         # &details=Lecture%20for%20AM%20112%20-%20Intro%20to%20Partial%20Differential%20Equations.
         # &location=Porter%20Acad%20144
         # &ctz=America/Los_Angeles
-
-        # Construct the recurrence rule
-        if self.is_recurring and self.recurrence_pattern:
-            recurrence_rule = f"RRULE:FREQ={self.recurrence_pattern}"
-            
-            # Add specific days for weekly recurrence
-            if self.recurrence_pattern == "WEEKLY" and self.recurrence_days:
-                print(f"\n\nRecurrence Days: {self.recurrence_days}\n\n")
-                recurrence_rule += f";BYDAY={','.join(self.recurrence_days)}"
-
-            # Add recurrence count if specified
-            if self.recurrence_count:
-                recurrence_rule += f";COUNT={self.recurrence_count}"
-
-            # Add recurrence end date if specified
-            if self.recurrence_end_date:
-                print(f"\n\nRecurrence End Date: {self.get_end_date()}\n\n")
-                recurrence_rule += f";UNTIL={self.recurrence_end_date.strftime('%Y%m%d')}"
-        else:
-            recurrence_rule = None  # No recurrence
+        
+        recurrence_rule = dp.parse_recurring_pattern(self)
 
         gcal_link=(
             f"https://www.google.com/calendar/render?action=TEMPLATE"
@@ -72,6 +67,24 @@ class Event(BaseModel):
         )
         gcal_link = gcal_link.replace(' ', '+')
         return gcal_link
+    
+    def get_outlook_link(self):
+        # https://outlook.live.com/owa/?path=/calendar/action/compose&rru=addevent
+        # &subject=AM%20112%20-%20Intro%20to%20PDEs%20Lecture
+        # &startdt=2025-01-30T23:20:00Z
+        # &enddt=2025-01-31T00:55:00Z
+        # &body=Course%20Title%3A%20AM%20112%20-%20Intro%20to%20PDEs%2C%20Instructor%3A%20Hongyun%20Wang.
+        # &location=Porter%20Acad%20144
+        pass
+    
+    def get_yahoo_link(self):
+        # https://calendar.yahoo.com/?v=60&view=d&type=20
+        # &title=AM%20112%20-%20Intro%20to%20PDEs%20Lecture
+        # &st=20250130T232000Z
+        # &et=20250131T005500Z
+        # &desc=Course%20Title%3A%20AM%20112%20-%20Intro%20to%20PDEs%2C%20Instructor%3A%20Hongyun%20Wang.
+        # &in_loc=Porter%20Acad%20144
+        pass
     
     def get_start_time(self):
         start_str = self.start_time.strftime('%Y%m%dT%H%M%S')
