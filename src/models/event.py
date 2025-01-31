@@ -1,8 +1,10 @@
+import uuid
 from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel
 import utils.date_parser as dp
+from icalendar import Calendar, Event as IcalEvent, vRecur 
 
 
 class Event(BaseModel):
@@ -19,31 +21,41 @@ class Event(BaseModel):
     recurrence_count: Optional[int] = None
     recurrence_end_date: Optional[datetime] = None
     
-    def write_to_icalevent(self, file_name):
-        # BEGIN:VCALENDAR
-        # VERSION:2.0
-        # BEGIN:VEVENT
-        # UID:2025-01-31T01:10:12.281Z@example.com
-        # DTSTAMP:20250131T011012Z
-        # DTSTART:20250130T232000Z
-        # DTEND:20250131T005500Z
-        # SUMMARY:AM 112 - Intro to PDEs Lecture
-        # DESCRIPTION:Course Title: AM 112 - Intro to PDEs, Instructor: Hongyun Wang.
-        # LOCATION:Porter Acad 144
-        # END:VEVENT
-        # END:VCALENDAR
-        with open(file_name, 'w') as f:
-            f.write("BEGIN:VCALENDAR\n")
-            f.write("VERSION:2.0\n")
-            f.write("BEGIN:VEVENT\n")
-            f.write(f"SUMMARY:{self.title}\n")
-            f.write(f"DTSTART:{self.start_time.strftime('%Y%m%dT%H%M%S')}\n")
-            f.write(f"DTEND:{self.end_time.strftime('%Y%m%dT%H%M%S')}\n")
-            f.write(f"DESCRIPTION:{self.description}\n")
-            f.write(f"LOCATION:{self.location}\n")
-            f.write(f"ATTENDEES:{','.join(self.attendees)}\n")
-            f.write("END:VEVENT\n")
-            f.write("END:VCALENDAR\n")
+
+
+    def write_to_icalevent(self, file_name: str):
+        cal = Calendar()  # Create a calendar object
+        cal.add("prodid", "-//My Event Calendar//mxm.dk//")
+        cal.add("version", "2.0")
+
+        event = IcalEvent()  # Create an event object
+        event.add("summary", self.title)
+        event.add("dtstart", self.start_time)
+        event.add("dtend", self.end_time if self.end_time else self.start_time)
+        event.add("dtstamp", datetime.now())
+        event.add("location", self.location if self.location else "No Location")
+        event.add("description", self.description if self.description else "No Description")
+        event.add("uid", str(uuid.uuid4()))  # Ensure a globally unique event ID
+
+
+        # Add attendees if available
+        if self.attendees:
+            for attendee in self.attendees:
+                event.add("attendee", f"mailto:{attendee}")
+
+        # Add recurrence rule if the event is recurring
+        rrule = dp.get_ical_rrule(self)
+        if rrule:
+            event["RRULE"] = rrule
+
+        # Add the event to the calendar
+        cal.add_component(event)
+
+        # Save the calendar to an .ics file
+        with open(file_name, "wb") as f:
+            f.write(cal.to_ical())
+
+        print(f"iCalendar file created: {file_name}")
     
     def get_gcal_link(self):
         # parsed_event.write_to_icalevent("test.ics")
