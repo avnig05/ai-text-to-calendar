@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+from src.nlp.text_parser import TextToEventParser
 
 class CalendarRequest(BaseModel):
     event_body: str
@@ -13,4 +14,7 @@ async def root():
 
 @app.post("/add-to-calendar")
 async def add_to_calendar(item: CalendarRequest):
-    return item
+    # return item
+    parser = TextToEventParser()
+    event = parser.parse_text(item.event_body)
+    return event

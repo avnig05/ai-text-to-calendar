@@ -1,7 +1,7 @@
-import spacy
+# import spacy
 from datetime import datetime
-from models.event import Event
-from utils.date_parser import parse_datetime
+from src.models.event import Event
+from src.utils.date_parser import parse_datetime
 from openai import OpenAI
 import json
 import logging
