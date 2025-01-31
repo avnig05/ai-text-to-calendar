@@ -1,8 +1,8 @@
 # import spacy
 from datetime import datetime
 import tzlocal as tz
-from src.models.event import Event
-from src.utils.date_parser import parse_datetime
+from models.event import Event
+from utils.date_parser import parse_datetime
 from openai import OpenAI
 import json
 import logging
@@ -41,11 +41,11 @@ class TextToEventParser:
 
                     Extract and return in JSON format:
                     
-                    - title: str
-                    - start_time: ISO 8601 datetime format (e.g., "20250130T232000") but only accurate to the minute, set seconds to 00 
-                    - time_zone: str, representing the timezone of the event eg: "America/Los_Angeles"
+                    - title: str **a title is required never leave it null**
+                    - start_time: ISO 8601 datetime format (e.g., "20250130T232000") but only accurate to the minute, set seconds to 00 **a starttime is required never leave it null** 
+                    - time_zone: str, representing the timezone of the event eg: "America/Los_Angeles" **a timezone is required never leave it null**
                         -- default to none if not specified.
-                    - end_time: ISO 8601 datetime format (e.g., "20250130T232000") but only accurate to the minute, set seconds to 00
+                    - end_time: ISO 8601 datetime format (e.g., "20250130T232000") but only accurate to the minute, set seconds to 00 **an endtime is required never leave it null**
                         -- if the end time is not specified, use context to make a best guess and assume that either the event is 1 hour long or is an all-day event ending at 23:59.
                         -- if the end time is specified without a date, assume it has the same date as the start time.
                         -- if the date is given without a time, assume the event is an all-day event and ends at 23:59 on that date.
@@ -109,17 +109,15 @@ class TextToEventParser:
                 start_time=parse_datetime(event_data.get("start_time")),  # Convert to datetime
                 time_zone=str(current_time_zone) if not event_data.get("time_zone") else event_data.get("time_zone"),
                 end_time=parse_datetime(event_data.get("end_time")),
-                description=event_data.get("description"),
-                location=event_data.get("location"),
+                description=event_data.get("description", " "),
+                location=event_data.get("location", " "),
                 attendees=event_data.get("attendees", []),
                 is_recurring = event_data.get("is_recurring", False),
                 recurrence_pattern = event_data.get("recurrence_pattern"),
                 recurrence_days = event_data.get("recurrence_days"),
                 recurrence_count = event_data.get("recurrence_count"),
-                recurrence_end_date = parse_datetime(event_data.get("recurrence_end_date"))
-                
+                recurrence_end_date = parse_datetime(event_data.get("recurrence_end_date")) if event_data.get("recurrence_end_date") else None
             )
-
         except ValueError as ve:
             print(f"Error: {ve}")  # Log missing field errors
             return f"Invalid event data: {ve}"

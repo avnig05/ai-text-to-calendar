@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from src.nlp.text_parser import TextToEventParser
+from nlp.text_parser import TextToEventParser
 
 class CalendarRequest(BaseModel):
     event_body: str

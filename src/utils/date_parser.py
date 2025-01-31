@@ -6,7 +6,8 @@ from typing import Tuple, Optional
 def parse_datetime(text: str) -> Optional[datetime]:
     try:
         return parse(text)
-    except ValueError:
+    except ValueError as ve:
+        print(f"Error parsing datetime: {ve}")
         return None
 
 def extract_date_range(text: str) -> Tuple[datetime, datetime]:
