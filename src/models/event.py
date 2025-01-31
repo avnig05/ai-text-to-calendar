@@ -14,7 +14,7 @@ class Event(BaseModel):
     location: Optional[str] = None
     attendees: Optional[List[str]] = None
     is_recurring: bool = False
-    recurrence_pattern: Optional[str] = None
+    recurrence_pattern: Optional[str] = ""
     recurrence_days: Optional[List[str]] = None
     recurrence_count: Optional[int] = None
     recurrence_end_date: Optional[datetime] = None
@@ -59,12 +59,18 @@ class Event(BaseModel):
         gcal_link=(
             f"https://www.google.com/calendar/render?action=TEMPLATE"
             f"&text={self.title}"
-            f"&dates={self.get_start_time()}/{self.get_start_time()}"
-            f"&details={self.description}"
-            f"&location={self.location}&"
-            f"ctz={self.time_zone}"
-            f"&recur={recurrence_rule}"
+            f"&dates={self.get_start_time()}/{self.get_end_time()}"
         )
+        if self.description:
+            gcal_link += f"&details={self.description}"
+        if self.location:
+            gcal_link += f"&location={self.location}"
+        
+        gcal_link+=f"&ctz={self.time_zone}"
+        
+        if recurrence_rule:
+            gcal_link += f"&recur={recurrence_rule}"
+        
         gcal_link = gcal_link.replace(' ', '+')
         return gcal_link
     
