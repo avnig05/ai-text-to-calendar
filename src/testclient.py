@@ -32,8 +32,15 @@ def test_parse_text():
 def use_user_input(text):
     parser = TextToEventParser()
     print("\nEvent From User Input:")
-    print(parser.parse_text(text))
-    print()
+    try:
+        parsed_event = parser.parse_text(text)
+        print(parsed_event)
+        gcal_link = parsed_event.get_gcal_link()
+        print(f"Google Calendar Link: {gcal_link}")
+        print()
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return
 
 if __name__ == "__main__":
     # print("Running text parser tests...")
@@ -42,6 +49,7 @@ if __name__ == "__main__":
     while True:
         print("getting event from user input...")
         userin = input("Enter an event: ")
-        if userin == "exit":
+        if userin == "exit" or userin == "q":
             break
         use_user_input(userin)
+        
