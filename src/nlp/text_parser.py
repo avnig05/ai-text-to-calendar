@@ -6,7 +6,8 @@ import os
 import traceback
 
 # Third-party imports
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
+from pathlib import Path
 from openai import OpenAI
 from pydantic import ValidationError
 import tzlocal as tz
@@ -20,13 +21,13 @@ logging.basicConfig(level=logging.ERROR)  # Configure logging
 class TextToEventParser:
     def __init__(self):
         # Load the .env file
-        load_dotenv()
+        load_dotenv(dotenv_path='./src/config/.env')
 
         # Get the API key
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
             raise ValueError("API key not found. Make sure you have a .env file with OPENAI_API_KEY set.")
-
+        
         # Initialize OpenAI client with API key
         self.client = OpenAI(api_key=api_key)
     

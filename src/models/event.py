@@ -77,6 +77,8 @@ class Event(BaseModel):
             gcal_link += f"&details={self.description}"
         if self.location:
             gcal_link += f"&location={self.location}"
+        if self.attendees:
+            gcal_link += f"&add={','.join(self.attendees)}"
         
         gcal_link+=f"&ctz={self.time_zone}"
         
