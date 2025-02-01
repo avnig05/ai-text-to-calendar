@@ -4,16 +4,23 @@ import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select } from "@/components/ui/select"
-import { timezones } from "@/lib/timezones"
+import { GeneratedEventDisplay } from "./generated-event"
+import { CalendarEvent } from "@/types/CalendarEvent"
+import { generateEventFromText } from "@/utils/eventGenerator"
 
 export function CalendarConverter() {
   const [text, setText] = useState("")
-  const [timezone, setTimezone] = useState(timezones[0].value)
+  const [generatedEvent, setGeneratedEvent] = useState<CalendarEvent | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleConvert = () => {
-    // Conversion logic will be implemented here
+  const handleConvert = async () => {
+    try {
+      const event = await generateEventFromText(text)
+      setGeneratedEvent(event)
+    } catch (error) {
+      console.error('Error generating event:', error)
+      // Handle error appropriately
+    }
   }
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,7 +60,7 @@ export function CalendarConverter() {
       <Card className="w-full">
         <CardHeader>
           <CardTitle className="text-center text-2xl">UCSC AI Calendar Converter</CardTitle>
-          <p className="text-center text-muted-foreground">Convert text to calendar events with ease</p>
+          <p className="text-center text-muted-foreground mt-2">Convert text to calendar events with ease</p>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Hidden file input */}
@@ -88,18 +95,6 @@ export function CalendarConverter() {
             className="min-h-[100px]"
           />
 
-          {/* Timezone Selector */}
-          <div className="flex items-center gap-2">
-            <svg className="h-5 w-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <Select
-              value={timezone}
-              onValueChange={setTimezone}
-              options={timezones}
-            />
-          </div>
-
           {/* Convert Button */}
           <Button 
             onClick={handleConvert} 
@@ -109,6 +104,9 @@ export function CalendarConverter() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Generated Event Display */}
+      {generatedEvent && <GeneratedEventDisplay event={generatedEvent} />}
     </div>
   )
 } 
