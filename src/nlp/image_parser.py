@@ -4,6 +4,7 @@ from typing import Optional
 from dotenv import load_dotenv
 import base64
 import json
+from utils.readenv import get_openai_key
 
 
 # private Helper function to encode the image
@@ -14,16 +15,7 @@ def encode_image(image_path):
 
 class ImageToTextParser:
     def __init__(self):
-        # Load the .env file
-        load_dotenv(dotenv_path='./src/config/.env')
-
-        # Get the API key
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key:
-            raise ValueError("API key not found. Make sure you have a .env file with OPENAI_API_KEY set.")
-        
-        # Initialize OpenAI client with API key
-        self.client = OpenAI(api_key=api_key)
+        self.client = OpenAI(api_key=get_openai_key())
 
     def parse_image(self, image_path: str):
         """
@@ -39,7 +31,7 @@ class ImageToTextParser:
 
             # Getting the Base64 string
             base64_image = encode_image(image_path)
-            
+            print(f"sending image: {image_path} to OpenAI for processing...")
             response = self.client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
@@ -48,13 +40,9 @@ class ImageToTextParser:
                         "content": [
                             {
                                 "type": "text",
-                                "text": """extract all the text from the image, this text will be used to create a calendar event
-                                        At the very minimum get a title and a date and time from the image, you will return these as 1 string without any new lines
-                                        into a json object with the field name "text" and the value being the extracted text
-                                        if there appear to be mutiple different events in the image, return each description one as a separate field in the JSON object,
-                                        if there appears to be an event with a sub event, return the sub event as a separate event, but include all the information that was relevant from its paerent
-                                        do your best to include every peice of text in the image even if it doesnt seem relevent, if you are unsure about a peice of text
-                                        make your best interpretation and, include it in the JSON object
+                                "text": """
+                                        extract all the text from the image, this text will be used to create a calendar event
+                                        you will return these as 1 string without any new lines into a json object
                                         for example The final output should be a clean JSON like:
                                         {
                                         "events": [
@@ -62,6 +50,15 @@ class ImageToTextParser:
                                             {"parsed_event": "all the text from the image relating to the second event"}
                                         ]
                                         }
+                                        **At the very minimum get a title and a date and time from the image**,
+                                        - if there appear to be mutiple different events in the image, return each one as a separate field in the JSON object,
+                                        - if there appears to be an event with a sub event
+                                            --eg: a class with seperate lecture and discussion component, or a large event with small sub events like a hackathon with multiple workshops
+                                            return the sub event as a separate event, but include all the information that was relevant from it's parent event
+                                            --eg: for a class with a class title, include the name of the class in both the lecture and discussion events
+                                            --eg: for a hackathon, include the name of the hackathon in all the sub events
+                                        do your best to include every peice of text in the image even if it doesnt seem relevent it is better to be exhaustive than miss details,
+                                        if you are unsure about a peice of text make your best interpretation and, include it in the JSON object       
                                         """,
                             },
                             {
@@ -84,6 +81,7 @@ class ImageToTextParser:
             for event in parsed_json["events"]:
                 extracted_text_prompts.append(event["parsed_event"])
 
+            print("Successfully extracted text from the image.")
             return extracted_text_prompts
 
         except Exception as e:

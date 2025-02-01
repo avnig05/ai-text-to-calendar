@@ -20,6 +20,9 @@ class Event(BaseModel):
     recurrence_days: Optional[List[str]] = None
     recurrence_count: Optional[int] = None
     recurrence_end_date: Optional[datetime] = None
+    gcal_link: Optional[str] = None
+    outlook_link: Optional[str] = None
+    yahoo_link: Optional[str] = None
     
 
 
@@ -57,7 +60,7 @@ class Event(BaseModel):
 
         print(f"iCalendar file created: {file_name}")
     
-    def get_gcal_link(self):
+    def set_gcal_link(self):
         # parsed_event.write_to_icalevent("test.ics")
         # https://calendar.google.com/calendar/render?action=TEMPLATE
         # &text=AM%20112%20-%20Intro%20to%20PDEs%20Lecture
@@ -86,25 +89,78 @@ class Event(BaseModel):
             gcal_link += f"&recur={recurrence_rule}"
         
         gcal_link = gcal_link.replace(' ', '+')
-        return gcal_link
+        self.gcal_link = gcal_link
     
-    def get_outlook_link(self):
+    def set_outlook_link(self):
         # https://outlook.live.com/owa/?path=/calendar/action/compose&rru=addevent
         # &subject=AM%20112%20-%20Intro%20to%20PDEs%20Lecture
         # &startdt=2025-01-30T23:20:00Z
         # &enddt=2025-01-31T00:55:00Z
         # &body=Course%20Title%3A%20AM%20112%20-%20Intro%20to%20PDEs%2C%20Instructor%3A%20Hongyun%20Wang.
         # &location=Porter%20Acad%20144
-        pass
+        
+        # Parse recurrence rule if needed
+        recurrence_rule = dp.parse_recurring_pattern(self)
+
+        # Base Outlook link
+        outlook_link = (
+            f"https://outlook.live.com/owa/?path=/calendar/action/compose&rru=addevent"
+            f"&subject={self.title}"
+            f"&startdt={self.get_start_time().replace('Z', '')}"  # Ensure proper datetime format
+            f"&enddt={self.get_end_time().replace('Z', '')}"
+        )
+
+        # Add optional details
+        if self.description:
+            outlook_link += f"&body={self.description}"
+        if self.location:
+            outlook_link += f"&location={self.location}"
+        if self.attendees:
+            outlook_link += f"&to={','.join(self.attendees)}"  # Outlook uses 'to' for attendees
+
+        # Handle recurrence if applicable
+        if recurrence_rule:
+            outlook_link += f"&recurrence={recurrence_rule}"  # Adjust if Outlook requires specific format
+
+        # Replace spaces with '+' for URL encoding
+        outlook_link = outlook_link.replace(' ', '+')
+
+        # Assign to object
+        self.outlook_link = outlook_link
     
-    def get_yahoo_link(self):
+    def set_yahoo_link(self):
         # https://calendar.yahoo.com/?v=60&view=d&type=20
         # &title=AM%20112%20-%20Intro%20to%20PDEs%20Lecture
         # &st=20250130T232000Z
         # &et=20250131T005500Z
         # &desc=Course%20Title%3A%20AM%20112%20-%20Intro%20to%20PDEs%2C%20Instructor%3A%20Hongyun%20Wang.
         # &in_loc=Porter%20Acad%20144
-        pass
+        # Parse recurrence rule if needed (Yahoo Calendar has limited support for recurrence)
+        recurrence_rule = dp.parse_recurring_pattern(self)
+
+        # Base Yahoo Calendar link
+        yahoo_link = (
+            f"https://calendar.yahoo.com/?v=60&view=d&type=20"
+            f"&title={self.title}"
+            f"&st={self.get_start_time()}"
+            f"&et={self.get_end_time()}"
+        )
+        
+        # Add optional details
+        if self.description:
+            yahoo_link += f"&desc={self.description}"
+        if self.location:
+            yahoo_link += f"&in_loc={self.location}"
+        
+        # Note: Yahoo Calendar doesn't support attendee invites via link parameters
+        # Add recurrence rule if applicable (Yahoo may have limited support)
+        if recurrence_rule:
+            yahoo_link += f"&rr={recurrence_rule}"  # This might need adjustment based on Yahoo's format
+
+        # Replace spaces with '+' for URL encoding
+        yahoo_link = yahoo_link.replace(' ', '+')
+        
+        self.yahoo_link = yahoo_link
     
     def get_start_time(self):
         start_str = self.start_time.strftime('%Y%m%dT%H%M%S')
@@ -115,4 +171,22 @@ class Event(BaseModel):
     def get_end_date(self):
         end_str = self.recurrence_end_date.strftime('%Y%m%d')
         return end_str
+
+    def __str__(self):
+        event_str = f"Title: {self.title}\n"
+        event_str += f"Start Time: {self.start_time}\n"
+        event_str += f"End Time: {self.end_time}\n"
+        event_str += f"Time Zone: {self.time_zone}\n"
+        event_str += f"Description: {self.description}\n"
+        event_str += f"Location: {self.location}\n"
+        event_str += f"Attendees: {self.attendees}\n"
+        event_str += f"Is Recurring: {self.is_recurring}\n"
+        event_str += f"Recurrence Pattern: {self.recurrence_pattern}\n"
+        event_str += f"Recurrence Days: {self.recurrence_days}\n"
+        event_str += f"Recurrence Count: {self.recurrence_count}\n"
+        event_str += f"Recurrence End Date: {self.recurrence_end_date}\n"
+        event_str += f"Google Calendar Link: {self.gcal_link}\n"
+        event_str += f"Outlook Calendar Link: {self.outlook_link}\n"
+        event_str += f"Yahoo Calendar Link: {self.yahoo_link}\n"
+        return event_str
     

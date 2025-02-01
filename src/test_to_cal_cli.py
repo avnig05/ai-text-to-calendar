@@ -40,9 +40,10 @@ def test_parse_text():
 def use_user_input(text, genIcal = False):
     parser = TextToEventParser()
     parsed_event = parser.parse_text(text)
-    gcal_link = parsed_event.get_gcal_link()
-    print(f"\n\nGoogle Calendar Link: {gcal_link}")
-    print("\n")
+    parsed_event.set_gcal_link()
+    # parsed_event.set_outlook_link()
+    # parsed_event.set_yahoo_link()
+    print(f"\n\nParsed Event:\n{parsed_event}")
     if genIcal:
         print("\nsaving event to ics file...\n")
         parsed_event.write_to_icalevent("test.ics")
