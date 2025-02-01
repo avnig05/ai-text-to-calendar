@@ -6,7 +6,7 @@ import os
 import traceback
 
 # Third-party imports
-from dotenv import load_dotenv, find_dotenv
+from dotenv import load_dotenv
 from pathlib import Path
 from openai import OpenAI
 from pydantic import ValidationError
@@ -45,56 +45,56 @@ class TextToEventParser:
             
             print("\nwaiting on response from OpenAI API...")
             response = self.client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {
-                    "role": "system",
-                    "content": f"""You are an AI that extracts structured event details from text. 
-                    The current time is: **{current_time}** and the current timezone is: **{current_time_zone}**. Use this to interpret relative dates.
+                model="gpt-4o",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": f"""You are an AI that extracts structured event details from text. 
+                        The current time is: **{current_time}** and the current timezone is: **{current_time_zone}**. Use this to interpret relative dates.
 
-                    - If a date is relative (e.g., "tomorrow at 2pm"), convert it into an absolute datetime based on the current time.
-                    - If a date is given without a time (e.g., "March 15"), assume **the time is 00:00 (midnight)**.
-                    - If only a time is given (e.g., "at 2pm"), assume **it refers to today** unless the event is clearly in the future.
+                        - If a date is relative (e.g., "tomorrow at 2pm"), convert it into an absolute datetime based on the current time.
+                        - If a date is given without a time (e.g., "March 15"), assume **the time is 00:00 (midnight)**.
+                        - If only a time is given (e.g., "at 2pm"), assume **it refers to today** unless the event is clearly in the future.
 
-                    Extract and return in JSON format:
-                    
-                    - title: str **a title is required never leave it null**
-                    - start_time: ISO 8601 datetime format (e.g., "20250130T232000") but only accurate to the minute, set seconds to 00 **a starttime is required never leave it null** 
-                    - time_zone: str, representing the timezone of the event eg: "America/Los_Angeles" **a timezone is required never leave it null**
-                        -- default to none if not specified.
-                    - end_time: ISO 8601 datetime format (e.g., "20250130T232000") but only accurate to the minute, set seconds to 00 **an endtime is required never leave it null**
-                        -- if the end time is not specified, use context to make a best guess and assume that either the event is 1 hour long or is an all-day event ending at 23:59.
-                        -- if the end time is specified without a date, assume it has the same date as the start time.
-                        -- if the date is given without a time, assume the event is an all-day event and ends at 23:59 on that date.
-                        -- if the duration is specified, calculate the end time based on the start time.
-                    - description: Optional[str] 
-                        -- if any links are provided, include them in the description. with a quick summary of what they are.
-                        -- if there is no description provided and there is enough context to generate one, generate a description. otherwise leave it null
-                    - location: Optional[str] 
-                    - attendees: Optional[List[str]] 
-                        -- if any email addresses are provided, include them in the attendees list.
-                    - is_recurring: bool 
-                        -- if the event is recurring, set this to true. and provide the recurrence pattern, if the pattern is not specified, assume it's a daily event.
-                        -- if the recurrence is not specified, assume it's a one-time event.
-                    - recurrence_pattern: Optional[str] 
-                        -- if the event is recurring, provide the recurrence pattern. otherwise, leave it null.
-                        -- recurrence patterns should only be in the following formats:
-                            ---DAILY, WEEKLY, MONTHLY, YEARLY
-                    -recurrence_days: Optional[List[str]]
-                        -- if the event is recurring, provide the days of the week it occurs on. otherwise, leave it null.
-                        -- reccurance_days should only be in the following formats:
-                            --MO, TU, WE, TH, FR, SA, SU
-                    -recurrence_count: Optional[int]
-                        -- if the event is recurring, try to tell if the user specifies the number of recurrences or the end date, if the number of recurrences is specified, provide it. otherwise, leave it null.
-                    -recurrence_end_date: Optional[str] Should be in just Date format YYYYMMDD (e.g., "20250130") 
-                        -- if the event is recurring, provide the end date of the recurrence. otherwise, leave it null to indicate that the recurrence is indefinite.
+                        Extract and return in JSON format:
+                        
+                        - title: str **a title is required never leave it null**
+                        - start_time: ISO 8601 datetime format (e.g., "20250130T232000") but only accurate to the minute, set seconds to 00 **a starttime is required never leave it null** 
+                        - time_zone: str, representing the timezone of the event eg: "America/Los_Angeles" **a timezone is required never leave it null**
+                            -- default to none if not specified.
+                        - end_time: ISO 8601 datetime format (e.g., "20250130T232000") but only accurate to the minute, set seconds to 00 **an endtime is required never leave it null**
+                            -- if the end time is not specified, use context to make a best guess and assume that either the event is 1 hour long or is an all-day event ending at 23:59.
+                            -- if the end time is specified without a date, assume it has the same date as the start time.
+                            -- if the date is given without a time, assume the event is an all-day event and ends at 23:59 on that date.
+                            -- if the duration is specified, calculate the end time based on the start time.
+                        - description: Optional[str] 
+                            -- if any links are provided, include them in the description. with a quick summary of what they are.
+                            -- if there is no description provided and there is enough context to generate one, generate a description. otherwise leave it null
+                        - location: Optional[str] 
+                        - attendees: Optional[List[str]] 
+                            -- if any email addresses are provided, include them in the attendees list.
+                        - is_recurring: bool 
+                            -- if the event is recurring, set this to true. and provide the recurrence pattern, if the pattern is not specified, assume it's a daily event.
+                            -- if the recurrence is not specified, assume it's a one-time event.
+                        - recurrence_pattern: Optional[str] 
+                            -- if the event is recurring, provide the recurrence pattern. otherwise, leave it null.
+                            -- recurrence patterns should only be in the following formats:
+                                ---DAILY, WEEKLY, MONTHLY, YEARLY
+                        -recurrence_days: Optional[List[str]]
+                            -- if the event is recurring, provide the days of the week it occurs on. otherwise, leave it null.
+                            -- reccurance_days should only be in the following formats:
+                                --MO, TU, WE, TH, FR, SA, SU
+                        -recurrence_count: Optional[int]
+                            -- if the event is recurring, try to tell if the user specifies the number of recurrences or the end date, if the number of recurrences is specified, provide it. otherwise, leave it null.
+                        -recurrence_end_date: Optional[str] Should be in just Date format YYYYMMDD (e.g., "20250130") 
+                            -- if the event is recurring, provide the end date of the recurrence. otherwise, leave it null to indicate that the recurrence is indefinite.
 
-                    If any field is missing, return null.
-                    """
-                },
-                {"role": "user", "content": text}
-            ],
-            response_format={'type': "json_object"}
+                        If any field is missing, return null.
+                        """
+                    },
+                    {"role": "user", "content": text}
+                ],
+                response_format={'type': "json_object"}
             )
             
         # catch any errors gracefully
