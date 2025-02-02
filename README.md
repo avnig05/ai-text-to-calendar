@@ -2,7 +2,7 @@
 
 Tool that turns plain text or images into calendar events for easy importing to Google Calendar or any other calendar
 
-## How to run this code:
+## How to run this code
 
 Make sure you pip install all the requirements located in `./requirements.txt` (currently might be issues)
 
@@ -32,7 +32,7 @@ curl -X POST http://127.0.0.1:8000/add-to-calendar \
 
 The output should have all the parsed information, including the link, as an object!
 
-## Future Improvments:
+## Future Improvements
 
--   connect to front end to allow for better UX
--   connect to google login for automatic import
+- connect to front end to allow for better UX
+- connect to google login for automatic import
