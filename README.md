@@ -3,7 +3,7 @@
 
 Tool that turns plain text or images into calendar events for easy importing to Google Calendar or any other calendar
 
-## How to run this code:
+## How to run this code
 
 Make sure you pip install all the requirements located in `./requirements.txt` (currently might be issues)
 
@@ -18,7 +18,7 @@ this program takes two types of input, you can either:
 
 you can also edit `test_to_cal_cli.py` and change the **genIcal** flag to true so it outputs a file in .ical format
 
-## Future Improvments:
+## Future Improvments
 
 - connect to front end to allow for better UX
 - connect to google login for automatic import
