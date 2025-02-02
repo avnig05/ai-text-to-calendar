@@ -24,7 +24,8 @@ Assuming all the required packages are installed (located in requirements.txt), 
 
 to test the route `/add-to-calendar`, enter the following into your terminal:
 
-```curl -X POST http://127.0.0.1:8000/add-to-calendar \
+```
+curl -X POST http://127.0.0.1:8000/add-to-calendar \
      -H "Content-Type: application/json" \
      -d '{"event_body":"meeting for slug ai at 7:00 pm thursday jan 30th, attendees will be Anurag and Bob","platform":"google calendar"}'
 ```
