@@ -2,12 +2,18 @@
 from datetime import datetime
 import json
 import logging
+import sys
 import os
 import traceback
+from pathlib import Path
+
+# Add this block before other imports to modify Python path
+src_path = str(Path(__file__).resolve().parent.parent)
+if src_path not in sys.path:
+    sys.path.append(src_path)
 
 # Third-party imports
 from dotenv import load_dotenv
-from pathlib import Path
 from openai import OpenAI
 from pydantic import ValidationError
 import tzlocal as tz
@@ -17,13 +23,14 @@ from models.event import Event
 from utils.date_parser import parse_datetime
 from utils.readenv import get_openai_key
 
+
 logging.basicConfig(level=logging.ERROR)  # Configure logging
 
 class TextToEventParser:
     def __init__(self):
         # Initialize OpenAI client with API key
         self.client = OpenAI(api_key=get_openai_key())
-    
+
     def parse_text(self, text: str) -> Event:
         """Parses text input to extract event details using OpenAI API.
         This method takes a text description of an event and uses OpenAI's API to extract structured event details,
