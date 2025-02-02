@@ -1,5 +1,13 @@
 from nlp.text_parser import TextToEventParser
+from nlp.image_parser import ImageToTextParser
 from models.event import Event
+from pathlib import Path
+
+
+def is_probable_path(s):
+    path = Path(s)
+    # Check if it exists or if it's syntactically a path
+    return path.exists() or path.is_absolute() or any(sep in s for sep in ['/', '\\'])
 
 def test_parse_text():
     parser = TextToEventParser()
@@ -29,27 +37,38 @@ def test_parse_text():
     print(parser.parse_text(test_text4))
     print()
     
-def use_user_input(text):
+def use_user_input(text, genIcal = False):
     parser = TextToEventParser()
-    print("\nEvent From User Input:")
-    try:
-        parsed_event = parser.parse_text(text)
-        print(parsed_event)
-        gcal_link = parsed_event.get_gcal_link()
-        print(f"Google Calendar Link: {gcal_link}")
-        print()
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        return
+    parsed_event = parser.parse_text(text)
+    parsed_event.set_gcal_link()
+    # parsed_event.set_outlook_link()
+    # parsed_event.set_yahoo_link()
+    print(f"\n\nParsed Event:\n{parsed_event}")
+    if genIcal:
+        print("\nsaving event to ics file...\n")
+        parsed_event.write_to_icalevent("test.ics")
+        
+def use_image_input(image_path, genIcal = False):
+    image_parser = ImageToTextParser()
+    prompt_list = image_parser.parse_image(image_path)
+    for prompt in prompt_list:
+            use_user_input(prompt, genIcal) 
+
 
 if __name__ == "__main__":
     # print("Running text parser tests...")
     # test_parse_text()
     # print("Tests completed.")
     while True:
-        print("getting event from user input...")
-        userin = input("Enter an event: ")
+        print("\ngetting event from user input...")
+        userin = input("Enter an event: ").lower()
         if userin == "exit" or userin == "q":
             break
-        use_user_input(userin)
-        
+        try:
+            if is_probable_path(userin):
+                print("Detected path, attempting to parse image...")
+                use_image_input(userin, genIcal=False)
+            else:
+                use_user_input(userin, genIcal=False)
+        except Exception as e:
+            print(f"An error occurred: {e}") 

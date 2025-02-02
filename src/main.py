@@ -1,14 +1,20 @@
-from flask import Flask
+from fastapi import FastAPI
+from pydantic import BaseModel
+from nlp.text_parser import TextToEventParser
 
-app = Flask(__name__)
+class CalendarRequest(BaseModel):
+    event_body: str
+    platform: str
 
+app = FastAPI()
 
-@app.route('/testing')
-def hello():
-    return {'date': '1/28/2025'}
+@app.get("/")
+async def root():
+    return {"message": "hello world"}
 
-@app.route('/testing2')
-def hello2():
-    return '<h1>Hello, There! 2</h1>'
-
-app.run(debug=True)
+@app.post("/add-to-calendar")
+async def add_to_calendar(item: CalendarRequest):
+    # return item
+    parser = TextToEventParser()
+    event = parser.parse_text(item.event_body)
+    return event

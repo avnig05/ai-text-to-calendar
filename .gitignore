@@ -1,5 +1,4 @@
 # Secrets and Configuration
-/src/config/secrets.py
 .env
 
 # Python
@@ -38,3 +37,4 @@ ENV/
 # OS
 .DS_Store
 Thumbs.db
+src/config/secrets.py
