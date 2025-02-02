@@ -37,4 +37,3 @@ ENV/
 # OS
 .DS_Store
 Thumbs.db
-src/config/secrets.py

@@ -22,7 +22,7 @@ class ImageToTextParser:
         Parse an image and extract text content using OpenAI's Vision API.
         
         Args:
-            image_path (str): Path to the image file
+            image_path (str): Path to the image file, make sure this is the full parth, eg ./src/test-images/single_event.png
             
         Returns:
             str list: list of Extracted text content from the image, or empty list if parsing fails
