@@ -11,9 +11,9 @@ copy/change `./src/config/.env.example` to `./src/config/.env` and replace the p
 You can now run `test_to_cal_cli.py`
 this program takes two types of input, you can either:
 
--   pass in a path to an image e.g: `./src/test-images/single_event.png` in which case `./src/nlp/image_parser.py` will be called before calling `./src/nlp/text_parser.py`
+- pass in a path to an image e.g: `./src/test-images/single_event.png` in which case `./src/nlp/image_parser.py` will be called before calling `./src/nlp/text_parser.py`
 
--   or you can directly type your event prompt in which case just `./src/nlp/text_parser.py` will be called and will output an `Event` object with the relevant details and links
+- or you can directly type your event prompt in which case just `./src/nlp/text_parser.py` will be called and will output an `Event` object with the relevant details and links
 
 you can also edit `test_to_cal_cli.py` and change the **genIcal** flag to true so it outputs a file in .ical format
 
@@ -24,7 +24,7 @@ Assuming all the required packages are installed (located in requirements.txt), 
 
 to test the route `/add-to-calendar`, enter the following into your terminal:
 
-```
+```bash
 curl -X POST http://127.0.0.1:8000/add-to-calendar \
      -H "Content-Type: application/json" \
      -d '{"event_body":"meeting for slug ai at 7:00 pm thursday jan 30th, attendees will be Anurag and Bob","platform":"google calendar"}'
