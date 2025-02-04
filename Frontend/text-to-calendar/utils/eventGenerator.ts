@@ -23,10 +23,12 @@ export const generateEventFromText = async (
 					"This is a sample event created from the input text.",
 				startTime: new Date(),
 				endTime: new Date(Date.now() + 60 * 60 * 1000),
+				gcal_link: "",
 			};
 		}
 
 		const data = await response.json();
+		console.log(data);
 
 		// Create a default end time 1 hour after start time
 		const startTime = new Date(data.startTime || Date.now());
@@ -39,6 +41,7 @@ export const generateEventFromText = async (
 				"This is a sample event created from the input text.",
 			startTime: startTime,
 			endTime: endTime,
+			gcal_link: data.gcal_link,
 		};
 	} catch (error) {
 		console.error("Error generating event:", error);
@@ -48,6 +51,7 @@ export const generateEventFromText = async (
 			description: "This is a sample event created from the input text.",
 			startTime: new Date(),
 			endTime: new Date(Date.now() + 60 * 60 * 1000),
+			gcal_link: "",
 		};
 	}
 };
