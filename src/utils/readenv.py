@@ -1,9 +1,14 @@
 from dotenv import load_dotenv
 import os
+from pathlib import Path
 
 def load_environment():
     """Load environment variables from .env file"""
-    load_dotenv(dotenv_path='../src/config/.env') 
+    # Get the base directory 
+    BASE_DIR = Path(__file__).resolve().parent.parent
+    dotenv_path = BASE_DIR / 'config' / '.env'
+
+    load_dotenv(dotenv_path=dotenv_path) 
     
     # You can access environment variables using os.getenv
     # Example: api_key = os.getenv('API_KEY')
