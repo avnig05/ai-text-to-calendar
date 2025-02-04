@@ -1,10 +1,7 @@
-import os
 from openai import OpenAI
-from typing import Optional
-from dotenv import load_dotenv
 import base64
 import json
-from utils.readenv import get_openai_key
+from event_generation.config.readenv import get_openai_key
 
 
 # private Helper function to encode the image

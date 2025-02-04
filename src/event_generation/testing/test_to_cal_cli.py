@@ -1,6 +1,6 @@
-from nlp.text_parser import TextToEventParser
-from nlp.image_parser import ImageToTextParser
-from models.event import Event
+from event_generation.nlp_parsers.text_parser import TextToEventParser
+from event_generation.nlp_parsers.image_parser import ImageToTextParser
+import event_generation.event.event
 from pathlib import Path
 
 

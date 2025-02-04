@@ -2,7 +2,7 @@ from datetime import datetime
 from dateutil.parser import parse
 from typing import Tuple, Optional
 from icalendar import Calendar, Event as IcalEvent, vRecur
-# from models.event import Event
+# from event_generation.event.event import Event
 
 def parse_datetime(text: str) -> Optional[datetime]:
     try:

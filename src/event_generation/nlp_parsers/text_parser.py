@@ -12,9 +12,9 @@ from pydantic import ValidationError
 import tzlocal as tz
 
 # Local application imports
-from models.event import Event
-from utils.date_parser import parse_datetime
-from utils.readenv import get_openai_key
+from event_generation.event.event import Event
+from event_generation.event.date_parser import parse_datetime
+from event_generation.config.readenv import get_openai_key
 
 logging.basicConfig(level=logging.ERROR)  # Configure logging
 

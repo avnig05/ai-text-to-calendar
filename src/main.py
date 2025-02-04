@@ -1,10 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from nlp.text_parser import TextToEventParser
-
-import os 
-import dotenv
+from event_generation.nlp_parsers.text_parser import TextToEventParser
+# from event_generation.event.event import Event
 
 class CalendarRequest(BaseModel):
     event_body: str

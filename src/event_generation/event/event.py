@@ -1,9 +1,8 @@
 import uuid
-from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel
-import utils.date_parser as dp
+import event_generation.event.date_parser as dp
 from icalendar import Calendar, Event as IcalEvent, vRecur 
 
 
