@@ -6,7 +6,7 @@ import os.path
 from datetime import datetime
 
 # Define the scopes (permissions) your app needs
-SCOPES = ['https://www.googleapis.com/auth/calendar']
+SCOPES = ['https://www.googleapis.com/auth/calendar.events']
 
 def authenticate_google():
     creds = None
