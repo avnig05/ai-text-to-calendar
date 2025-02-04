@@ -66,7 +66,7 @@ export function GeneratedEventDisplay({ event }: GeneratedEventDisplayProps) {
 							)}
 						</span>
 					</div>
-					
+
 					{/* Event Description */}
 					<div className="flex items-start gap-2 text-[#6B909F]">
 						<svg

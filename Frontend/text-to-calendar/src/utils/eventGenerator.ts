@@ -1,4 +1,4 @@
-import { start } from 'repl';
+// import { start } from 'repl';
 import { CalendarEvent } from '../types/CalendarEvent';
 
 export const generateEventFromText = async (text: string): Promise<CalendarEvent> => {

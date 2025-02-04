@@ -1,21 +1,13 @@
 import { CalendarEvent } from "../types/CalendarEvent";
 
 export const exportToGoogleCalendar = (event: CalendarEvent) => {
-	// const startTime = event.startTime
-	// 	.toISOString()
-	// 	.replace(/-|:|\.\d\d\d/g, "");
-	// const endTime = event.endTime.toISOString().replace(/-|:|\.\d\d\d/g, "");
-
-	//   const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
-	//     event.title
-	//   )}&dates=${startTime}/${endTime}&details=${encodeURIComponent(event.description)}`;
 	const url = event.gcal_link;
 	window.open(url, "_blank");
 };
 
 export const exportToOutlook = (event: CalendarEvent) => {
 	const url = event.outlook_link;
-	window.open(url, "_blank");
+	window.open(url);
 };
 
 export const exportToAppleCalendar = (event: CalendarEvent) => {
