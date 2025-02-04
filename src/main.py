@@ -30,6 +30,7 @@ async def add_to_calendar(item: CalendarRequest):
     parser = TextToEventParser()
     event = parser.parse_text(item.event_body)
     event.set_gcal_link()
+    event.set_outlook_link()
 
-    print(event.title)
+    print(event)
     return event

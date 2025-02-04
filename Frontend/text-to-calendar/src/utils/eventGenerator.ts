@@ -1,3 +1,4 @@
+import { start } from 'repl';
 import { CalendarEvent } from '../types/CalendarEvent';
 
 export const generateEventFromText = async (text: string): Promise<CalendarEvent> => {
@@ -15,16 +16,19 @@ export const generateEventFromText = async (text: string): Promise<CalendarEvent
     }
 
     const data = await response.json();
+    console.log("Received JSON from API:", data);
     
     // Create a default end time 1 hour after start time
-    const startTime = new Date(data.startTime);
-    const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
+    const startTime = new Date(data.start_time);
+    const endTime = new Date(data.end_time);
 
     return {
       title: data.title,
-      description: data.description,
+      description: data.description || "No description",
       startTime: startTime,
       endTime: endTime,
+      gcal_link: data.gcal_link || null,
+      outlook_link: data.outlook_link || null,
     };
   } catch (error) {
     console.error('Error generating event:', error);

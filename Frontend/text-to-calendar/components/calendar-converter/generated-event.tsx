@@ -1,13 +1,17 @@
 import { CalendarEvent } from "@/types/CalendarEvent";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { exportToGoogleCalendar } from "@/src/utils/calendarExport";
+import { exportToGoogleCalendar, exportToOutlook } from "@/src/utils/calendarExport";
 import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
 
 interface GeneratedEventDisplayProps {
 	event: CalendarEvent;
 }
 
 export function GeneratedEventDisplay({ event }: GeneratedEventDisplayProps) {
+	const formatDateTime = (date: Date) => {
+		return format(date, "EEEE, MMMM d, yyyy 'at' h:mm a");
+	};
 	return (
 		<Card className="w-full border-[#218F98] bg-white/95 shadow-sm">
 			<CardHeader>
@@ -18,6 +22,7 @@ export function GeneratedEventDisplay({ event }: GeneratedEventDisplayProps) {
 			<CardContent className="space-y-6">
 				{/* Event Details */}
 				<div className="space-y-4">
+					{/* Event Title */}
 					<div className="flex items-start gap-2 text-[#071E37]">
 						<svg
 							className="h-5 w-5 mt-0.5 text-[#218F98]"
@@ -36,7 +41,7 @@ export function GeneratedEventDisplay({ event }: GeneratedEventDisplayProps) {
 							{event.title}
 						</span>
 					</div>
-
+					{/* Event Date & Time */}
 					<div className="flex items-start gap-2 text-[#6B909F]">
 						<svg
 							className="h-5 w-5 mt-0.5 text-[#218F98]"
@@ -51,9 +56,18 @@ export function GeneratedEventDisplay({ event }: GeneratedEventDisplayProps) {
 								d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
 							/>
 						</svg>
-						<span className="text-telegraf">{event.datetime}</span>
+						<span className="text-telegraf">
+							{formatDateTime(new Date(event.startTime))}
+							{event.endTime && (
+								<>
+									{" "}
+									- {formatDateTime(new Date(event.endTime))}
+								</>
+							)}
+						</span>
 					</div>
-
+					
+					{/* Event Description */}
 					<div className="flex items-start gap-2 text-[#6B909F]">
 						<svg
 							className="h-5 w-5 mt-0.5 text-[#218F98]"
@@ -86,7 +100,9 @@ export function GeneratedEventDisplay({ event }: GeneratedEventDisplayProps) {
 						>
 							Google Calendar
 						</Button>
-						<Button className="w-full bg-[#218F98] text-white hover:bg-[#218F98]/90 text-telegraf font-normal text-xs sm:text-sm px-2 py-1.5">
+						<Button className="w-full bg-[#218F98] text-white hover:bg-[#218F98]/90 text-telegraf font-normal text-xs sm:text-sm px-2 py-1.5"
+							onClick={() => exportToOutlook(event)}
+						>
 							Outlook
 						</Button>
 						<Button className="w-full bg-[#218F98] text-white hover:bg-[#218F98]/90 text-telegraf font-normal text-xs sm:text-sm px-2 py-1.5">

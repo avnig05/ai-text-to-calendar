@@ -41,7 +41,7 @@ def use_user_input(text, genIcal = False):
     parser = TextToEventParser()
     parsed_event = parser.parse_text(text)
     parsed_event.set_gcal_link()
-    # parsed_event.set_outlook_link()
+    parsed_event.set_outlook_link()
     # parsed_event.set_yahoo_link()
     print(f"\n\nParsed Event:\n{parsed_event}")
     if genIcal:

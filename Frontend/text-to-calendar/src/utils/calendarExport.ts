@@ -1,10 +1,10 @@
 import { CalendarEvent } from "../types/CalendarEvent";
 
 export const exportToGoogleCalendar = (event: CalendarEvent) => {
-	const startTime = event.startTime
-		.toISOString()
-		.replace(/-|:|\.\d\d\d/g, "");
-	const endTime = event.endTime.toISOString().replace(/-|:|\.\d\d\d/g, "");
+	// const startTime = event.startTime
+	// 	.toISOString()
+	// 	.replace(/-|:|\.\d\d\d/g, "");
+	// const endTime = event.endTime.toISOString().replace(/-|:|\.\d\d\d/g, "");
 
 	//   const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
 	//     event.title
@@ -14,15 +14,7 @@ export const exportToGoogleCalendar = (event: CalendarEvent) => {
 };
 
 export const exportToOutlook = (event: CalendarEvent) => {
-	const startTime = event.startTime.toISOString();
-	const endTime = event.endTime.toISOString();
-
-	const url = `https://outlook.office.com/calendar/0/deeplink/compose?subject=${encodeURIComponent(
-		event.title
-	)}&startdt=${startTime}&enddt=${endTime}&body=${encodeURIComponent(
-		event.description
-	)}`;
-
+	const url = event.outlook_link;
 	window.open(url, "_blank");
 };
 
