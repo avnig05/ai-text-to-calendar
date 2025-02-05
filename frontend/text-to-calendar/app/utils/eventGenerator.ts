@@ -4,6 +4,8 @@ export const generateEventFromText = async (
 	text: string
 ): Promise<CalendarEvent> => {
 	try {
+		console.log("prompt", text);
+		console.log("Sending request to backend");
 		const response = await fetch("http://127.0.0.1:8000/add-to-calendar", {
 			method: "POST",
 			// mode: "no-cors",
@@ -26,7 +28,7 @@ export const generateEventFromText = async (
 				gcal_link: "",
 			};
 		}
-
+		
 		const data = await response.json();
 		console.log(data);
 
