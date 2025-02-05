@@ -16,19 +16,11 @@ for easy testing you can run the CLI script by cding into `./ai-text-to-calendar
 
 you can also edit `test_to_cal_cli.py` and change the **genIcal** flag to true so it outputs a file in .ical format
 
-## How to start the server
+## How to start the backend server
 
 Assuming all the required packages are installed (located in requirements.txt), navigate into `./ai-text-to-calendar/src` folder of the project and run the folowing command in the terminal:
 
 `uvicorn main:app --reload`
-
-To start up the front end server navigate into `./ai-text-to-calendar/Frontend/text-to-calendar`
-and run:
-
-`npm run dev`
-
-now you should be able to go to `http://localhost:3000/` in your web browser to interact with the converter
-
 
 to test the route `/add-to-calendar` without starting the front end server, enter the following into your terminal:
 
@@ -40,6 +32,16 @@ curl -X POST http://127.0.0.1:8000/add-to-calendar \
 
 The output should have all the parsed information, including the link, as an object!
 
+## How to start the frontend server
+
+To start up the frontend server navigate into `./ai-text-to-calendar/frontend/text-to-calendar/app`
+and run:
+
+`npm run dev`
+
+now you should be able to naviate to `http://localhost:3000/` in your web browser to interact with the converter
+
 ## Future Improvements
 
 - connect to google login for automatic import
+- allow image input
