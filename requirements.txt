@@ -4,7 +4,7 @@ uvicorn==0.34.0
 pydantic==2.10.6
 
 # OpenAI Integration
-openai==1.12.0
+openai==1.61.0
 
 # Calendar Integration
 google-api-python-client==2.119.0

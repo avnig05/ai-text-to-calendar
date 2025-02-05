@@ -30,18 +30,16 @@ export const generateEventFromText = async (
 		const data = await response.json();
 		console.log(data);
 
-		// Create a default end time 1 hour after start time
-		const startTime = new Date(data.startTime || Date.now());
-		const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
-
 		return {
 			title: data.title || "Sample Event",
+			start_time: data.start_time,
+			time_zone: data.time_zone || "America/Los_Angeles",
+			end_time: data.end_time,
 			description:
 				data.description ||
-				"This is a sample event created from the input text.",
-			startTime: startTime,
-			endTime: endTime,
+				"No description provided for this event.",
 			gcal_link: data.gcal_link,
+			outlook_link: data.outlook_link,
 		};
 	} catch (error) {
 		console.error("Error generating event:", error);

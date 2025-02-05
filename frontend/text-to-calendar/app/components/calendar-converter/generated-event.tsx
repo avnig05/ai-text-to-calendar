@@ -2,15 +2,22 @@ import { CalendarEvent } from "@/types/CalendarEvent";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { exportToGoogleCalendar, exportToOutlook } from "@/app/utils/calendarExport";
 import { Button } from "@/app/components/ui/button";
-import { format } from "date-fns";
+import { format, parseISO, isValid } from "date-fns";
 
 interface GeneratedEventDisplayProps {
 	event: CalendarEvent;
 }
 
 export function GeneratedEventDisplay({ event }: GeneratedEventDisplayProps) {
-	const formatDateTime = (date: Date) => {
-		return format(date, "EEEE, MMMM d, yyyy 'at' h:mm a");
+	const formatDateTime = (date: string) => {
+		console.log(date);
+		const parsedDate = parseISO(date);
+		console.log(parsedDate);
+		if (!isValid(parsedDate)) {
+			console.error("Invalid Date:", date);
+			return "Invalid date";
+		}
+		return format(parsedDate, 'yyyy-MM-dd HH:mm');
 	};
 	return (
 		<Card className="w-full border-[#218F98] bg-white/95 shadow-sm">
@@ -57,13 +64,7 @@ export function GeneratedEventDisplay({ event }: GeneratedEventDisplayProps) {
 							/>
 						</svg>
 						<span className="text-telegraf">
-							{formatDateTime(new Date(event.startTime))}
-							{event.endTime && (
-								<>
-									{" "}
-									- {formatDateTime(new Date(event.endTime))}
-								</>
-							)}
+							{formatDateTime(event.start_time)} {" - "} {formatDateTime(event.end_time)}
 						</span>
 					</div>
 
