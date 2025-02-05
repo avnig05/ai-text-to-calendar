@@ -12,12 +12,15 @@ import { generateEventFromText } from "@/app/utils/eventGenerator"
 export function CalendarConverter() {
   const [text, setText] = useState("")
   const [generatedEvent, setGeneratedEvent] = useState<CalendarEvent | null>(null)
+  const [buttonLabel, setButtonLabel] = useState("Convert to Calendar Event") // New state for button label
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleConvert = async () => {
     try {
+      setButtonLabel("Converting...");
       const event = await generateEventFromText(text)
       setGeneratedEvent(event)
+      setButtonLabel("Convert to Calendar Event") // Change label after conversin
     } catch (error) {
       console.error('Error generating event:', error)
       // Handle error appropriately
@@ -124,7 +127,7 @@ export function CalendarConverter() {
             onClick={handleConvert} 
             className="w-full bg-[#218F98] text-white hover:bg-[#218F98]/90 text-telegraf font-normal text-sm sm:text-base py-2"
           >
-            Convert to Calendar Event
+            {buttonLabel}
           </Button>
         </CardContent>
       </Card>
