@@ -97,13 +97,11 @@ export function GeneratedEventDisplay({ event }: GeneratedEventDisplayProps) {
 					<div className="grid grid-cols-3 gap-2">
 						<Button
 							className="w-full bg-[#218F98] text-white hover:bg-[#218F98]/90 text-telegraf font-normal text-xs sm:text-sm px-2 py-1.5"
-							onClick={() => exportToGoogleCalendar(event)}
-						>
+							onClick={() => exportToGoogleCalendar(event)}>
 							Google Calendar
 						</Button>
 						<Button className="w-full bg-[#218F98] text-white hover:bg-[#218F98]/90 text-telegraf font-normal text-xs sm:text-sm px-2 py-1.5"
-							onClick={() => exportToOutlook(event)}
-						>
+							onClick={() => exportToOutlook(event)}>
 							Outlook
 						</Button>
 						<Button className="w-full bg-[#218F98] text-white hover:bg-[#218F98]/90 text-telegraf font-normal text-xs sm:text-sm px-2 py-1.5">

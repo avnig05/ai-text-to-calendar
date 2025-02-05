@@ -4,6 +4,9 @@ from typing import List, Optional
 from pydantic import BaseModel
 import event_generation.event.date_parser as dp
 from icalendar import Calendar, Event as IcalEvent, vRecur 
+from urllib.parse import quote
+from zoneinfo import ZoneInfo
+
 
 
 class Event(BaseModel):
@@ -89,40 +92,34 @@ class Event(BaseModel):
         
         gcal_link = gcal_link.replace(' ', '+')
         self.gcal_link = gcal_link
-    
+
     def set_outlook_link(self):
-        # https://outlook.live.com/owa/?path=/calendar/action/compose&rru=addevent
-        # &subject=AM%20112%20-%20Intro%20to%20PDEs%20Lecture
-        # &startdt=2025-01-30T23:20:00Z
-        # &enddt=2025-01-31T00:55:00Z
-        # &body=Course%20Title%3A%20AM%20112%20-%20Intro%20to%20PDEs%2C%20Instructor%3A%20Hongyun%20Wang.
-        # &location=Porter%20Acad%20144
-        
         # Parse recurrence rule if needed
         recurrence_rule = dp.parse_recurring_pattern(self)
+
+        # Ensure proper datetime format (ISO 8601)
+        start_dt = datetime.fromisoformat(self.get_start_time()).astimezone(ZoneInfo('UTC')).strftime('%Y-%m-%dT%H:%M:%SZ')
+        end_dt = datetime.fromisoformat(self.get_end_time()).astimezone(ZoneInfo('UTC')).strftime('%Y-%m-%dT%H:%M:%SZ')
 
         # Base Outlook link
         outlook_link = (
             f"https://outlook.live.com/owa/?path=/calendar/action/compose&rru=addevent"
-            f"&subject={self.title}"
-            f"&startdt={self.get_start_time().replace('Z', '')}"  # Ensure proper datetime format
-            f"&enddt={self.get_end_time().replace('Z', '')}"
+            f"&subject={quote(self.title)}"
+            f"&startdt={start_dt}"
+            f"&enddt={end_dt}"
         )
 
-        # Add optional details
+        # Add optional details with proper URL encoding
         if self.description:
-            outlook_link += f"&body={self.description}"
+            outlook_link += f"&body={quote(self.description)}"
         if self.location:
-            outlook_link += f"&location={self.location}"
+            outlook_link += f"&location={quote(self.location)}"
         if self.attendees:
-            outlook_link += f"&to={','.join(self.attendees)}"  # Outlook uses 'to' for attendees
+            outlook_link += f"&to={quote(','.join(self.attendees))}"  # URL-encode attendees list
 
         # Handle recurrence if applicable
         if recurrence_rule:
-            outlook_link += f"&recurrence={recurrence_rule}"  # Adjust if Outlook requires specific format
-
-        # Replace spaces with '+' for URL encoding
-        outlook_link = outlook_link.replace(' ', '+')
+            outlook_link += f"&recurrence={quote(recurrence_rule)}"  # Adjust if Outlook requires specific format
 
         # Assign to object
         self.outlook_link = outlook_link
