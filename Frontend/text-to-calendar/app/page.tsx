@@ -1,4 +1,4 @@
-import { CalendarConverter } from "@/components/calendar-converter"
+import { CalendarConverter } from "@/app/components/calendar-converter"
 
 export default function Home() {
   return (

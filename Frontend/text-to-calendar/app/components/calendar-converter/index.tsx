@@ -1,14 +1,13 @@
 "use client"
 
 import { useState, useRef } from "react"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/app/components/ui/button"
+import { Textarea } from "@/app/components/ui/textarea"
+import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card"
 import { GeneratedEventDisplay } from "./generated-event"
-import { CalendarEvent } from "@/types/CalendarEvent"
-import { generateEventFromText } from "@/utils/eventGenerator"
-import { Select } from "@/components/ui/select"
-import { timezones } from "@/lib/timezones"
+import { CalendarEvent } from "@/app/types/CalendarEvent"
+import { generateEventFromText } from "@/app/utils/eventGenerator"
+
 
 export function CalendarConverter() {
   const [text, setText] = useState("")
@@ -101,8 +100,7 @@ export function CalendarConverter() {
             onClick={() => fileInputRef.current?.click()}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
-            className="border-2 border-dashed border-[#218F98] rounded-lg p-12 text-center cursor-pointer 
-                     hover:bg-[#218F98]/5 transition-colors"
+            className="border-2 border-dashed border-[#218F98] rounded-lg p-12 text-center cursor-pointer hover:bg-[#218F98]/5 transition-colors"
           >
             <div className="flex flex-col items-center gap-2">
               <svg className="h-8 w-8 text-[#218F98]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -118,8 +116,7 @@ export function CalendarConverter() {
             placeholder="Or type your text here..."
             value={text}
             onChange={(e) => setText(e.target.value)}
-            className="min-h-[100px] text-telegraf border-[#A5C3C2] focus:border-[#218F98]
-                     bg-white/95 placeholder:text-[#6B909F] text-[#071E37]"
+            className="min-h-[100px] text-telegraf border-[#A5C3C2] focus:border-[#218F98] bg-white/95 placeholder:text-[#6B909F] text-[#071E37]"
           />
 
           <Button 

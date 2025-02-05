@@ -1,7 +1,7 @@
 import { CalendarEvent } from "@/types/CalendarEvent";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { exportToGoogleCalendar, exportToOutlook } from "@/src/utils/calendarExport";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
+import { exportToGoogleCalendar, exportToOutlook } from "@/app/utils/calendarExport";
+import { Button } from "@/app/components/ui/button";
 import { format } from "date-fns";
 
 interface GeneratedEventDisplayProps {

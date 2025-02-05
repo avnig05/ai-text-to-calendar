@@ -1,4 +1,4 @@
-import { CalendarEvent } from "@/types/CalendarEvent";
+import { CalendarEvent } from "@/app/types/CalendarEvent";
 
 export const generateEventFromText = async (
 	text: string
