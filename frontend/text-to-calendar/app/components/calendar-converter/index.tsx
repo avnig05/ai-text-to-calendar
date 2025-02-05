@@ -94,6 +94,7 @@ export function CalendarConverter() {
             onChange={handleFileUpload}
             className="hidden"
             accept=".txt"
+            title="Upload a text file" 
           />
 
           <div

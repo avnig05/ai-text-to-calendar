@@ -19,6 +19,7 @@ export function Select({ value, onValueChange, options }: SelectProps) {
         "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
         "disabled:cursor-not-allowed disabled:opacity-50"
       )}
+      title="Select an option"
     >
       {options.map((option) => (
         <option key={option.value} value={option.value}>
