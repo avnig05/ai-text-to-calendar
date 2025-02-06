@@ -1,4 +1,4 @@
-import { CalendarEvent } from "@/types/CalendarEvent";
+import { CalendarEvent } from "@/app/types/CalendarEvent";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { exportToGoogleCalendar, exportToOutlook } from "@/app/utils/calendarExport";
 import { Button } from "@/app/components/ui/button";
@@ -29,6 +29,7 @@ export function GeneratedEventDisplay({ event }: GeneratedEventDisplayProps) {
 			<CardContent className="space-y-6">
 				{/* Event Details */}
 				<div className="space-y-4">
+
 					{/* Event Title */}
 					<div className="flex items-start gap-2 text-[#071E37]">
 						<svg
@@ -48,6 +49,7 @@ export function GeneratedEventDisplay({ event }: GeneratedEventDisplayProps) {
 							{event.title}
 						</span>
 					</div>
+					
 					{/* Event Date & Time */}
 					<div className="flex items-start gap-2 text-[#6B909F]">
 						<svg
@@ -87,6 +89,7 @@ export function GeneratedEventDisplay({ event }: GeneratedEventDisplayProps) {
 							{event.description}
 						</span>
 					</div>
+					
 				</div>
 
 				{/* Updated Export Options */}

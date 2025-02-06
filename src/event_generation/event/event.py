@@ -97,9 +97,18 @@ class Event(BaseModel):
         # Parse recurrence rule if needed
         recurrence_rule = dp.parse_recurring_pattern(self)
 
-        # Ensure proper datetime format (ISO 8601)
-        start_dt = datetime.fromisoformat(self.get_start_time()).astimezone(ZoneInfo('UTC')).strftime('%Y-%m-%dT%H:%M:%SZ')
-        end_dt = datetime.fromisoformat(self.get_end_time()).astimezone(ZoneInfo('UTC')).strftime('%Y-%m-%dT%H:%M:%SZ')
+        # Ensure proper datetime format for outlook links (ISO 8601)
+        # Parse the non-standard date string using strptime:
+        sdt = datetime.strptime(self.get_start_time(), "%Y%m%dT%H%M%S")
+        edt = datetime.strptime(self.get_end_time(), "%Y%m%dT%H%M%S")
+
+        # Convert the time to UTC (this assumes that the parsed datetime is in the local timezone)
+        utc_sdt = sdt.astimezone(ZoneInfo('UTC'))
+        utc_edt = edt.astimezone(ZoneInfo('UTC'))
+
+        # Format it to the string Outlook expects:
+        start_dt = utc_sdt.strftime('%Y-%m-%dT%H:%M:%SZ')
+        end_dt = utc_edt.strftime('%Y-%m-%dT%H:%M:%SZ')
 
         # Base Outlook link
         outlook_link = (

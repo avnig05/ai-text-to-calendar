@@ -2,7 +2,7 @@
 
 Tool that turns plain text or images into calendar events for easy importing to Google Calendar or any other calendar
 
-## How to run this code
+## How to run the calendar converter as a CLI
 
 Make sure you pip install all the requirements located in `./requirements.txt` (currently might be issues)
 
@@ -34,7 +34,10 @@ The output should have all the parsed information, including the link, as an obj
 
 ## How to start the frontend server
 
-To start up the frontend server navigate into `./ai-text-to-calendar/frontend/text-to-calendar/app`
+make sure you have npm installed
+run `npm install` and `npm install next`
+
+To start up the frontend server navigate into `./ai-text-to-calendar/frontend/text-to-calendar/`
 and run:
 
 `npm run dev`

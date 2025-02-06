@@ -1,9 +1,9 @@
 export interface CalendarEvent {
 	title: string;
-	start_time: Date;
+	start_time: string;
 	time_zone: string;
-	end_time: Date;
+	end_time: string;
 	description: string;
-	gcal_link: URL;
-	outlook_link: URL;
+	gcal_link: string;
+	outlook_link: string;
 }
