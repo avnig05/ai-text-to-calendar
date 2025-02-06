@@ -6,15 +6,15 @@ Tool that turns plain text or images into calendar events for easy importing to 
 
 Make sure you pip install all the requirements located in `./requirements.txt` (currently might be issues)
 
-copy/change `./src/event_generation/config/.env.example` to `./src/event_generation/config/.env` and replace the place holder with your openAi API key
+copy/change `./src/event_generation/config/.env.example` to `./src/event_generation/config/.env` and replace the placeholder with your OpenAI API key
 
-for easy testing you can run the CLI script by cding into `./ai-text-to-calendar/src/` and running `python -m event_generation.testing.test_to_cal_cli`
+for easy testing you can run the CLI script by CD'ing into `./ai-text-to-calendar/src/` and running `python -m event_generation.testing.test_to_cal_cli`
 
 - pass in a path to an image e.g: `./src/event_generation/testing/single_event.png` in which case `image_parser.py` will be called to scrape the image into a text prompt before calling `text_parser.py`
 
-- or you can directly type your event prompt in which case just `text_parser.py` will be called and will output an `Event` object with the relevant details and links
+- or you can directly type your event prompt in which case just `text_parser.py` will be called and will output a `Event` object with the relevant details and links
 
-you can also edit `test_to_cal_cli.py` and change the **genIcal** flag to true so it outputs a file in .ical format
+you can also edit `test_to_cal_cli.py` and change the **genIcal** flag to true, so it outputs a file in .ical format
 
 ## How to start the backend server
 
@@ -42,7 +42,7 @@ and run:
 
 `npm run dev`
 
-now you should be able to naviate to `http://localhost:3000/` in your web browser to interact with the converter
+now you should be able to navigate to `http://localhost:3000/` in your web browser to interact with the converter
 
 ## Future Improvements
 
