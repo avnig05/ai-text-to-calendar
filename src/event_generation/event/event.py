@@ -23,6 +23,7 @@ class Event(BaseModel):
     recurrence_end_date: Optional[datetime] = None
     gcal_link: Optional[str] = None
     outlook_link: Optional[str] = None
+    yahoo_link: Optional[str] = None
 
     def write_to_icalevent(self, file_name: str):
         cal = Calendar()  # Create a calendar object
