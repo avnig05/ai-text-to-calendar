@@ -3,6 +3,7 @@
 import * as React from "react"
 import { cn } from "@/app/lib/utils"
 
+// Select dropdown component
 export interface SelectProps {
   value: string
   onValueChange: (value: string) => void
@@ -28,4 +29,4 @@ export function Select({ value, onValueChange, options }: SelectProps) {
       ))}
     </select>
   )
-} 
+}
