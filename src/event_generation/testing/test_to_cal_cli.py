@@ -1,19 +1,21 @@
 from event_generation.nlp_parsers.text_parser import TextToEventParser
 from event_generation.nlp_parsers.image_parser import ImageToTextParser
-import event_generation.event.event
+
+# import event_generation.event.event
 from pathlib import Path
 
 
 def is_probable_path(s):
     path = Path(s)
     # Check if it exists or if it's syntactically a path
-    return path.exists() or path.is_absolute() or any(sep in s for sep in ['/', '\\'])
+    return path.exists() or path.is_absolute() or any(sep in s for sep in ["/", "\\"])
+
 
 def test_parse_text():
     parser = TextToEventParser()
 
     # Test case 1: Basic event
-    
+
     test_text1 = "Meeting with John tomorrow at 2pm"
     print("\nTest 1:")
     print(parser.parse_text(test_text1))
@@ -36,8 +38,9 @@ def test_parse_text():
     print("\nTest 4:")
     print(parser.parse_text(test_text4))
     print()
-    
-def use_user_input(text, genIcal = False):
+
+
+def use_user_input(text, genIcal=False):
     parser = TextToEventParser()
     parsed_event = parser.parse_text(text)
     parsed_event.set_gcal_link()
@@ -47,12 +50,13 @@ def use_user_input(text, genIcal = False):
     if genIcal:
         print("\nsaving event to ics file...\n")
         parsed_event.write_to_icalevent("test.ics")
-        
-def use_image_input(image_path, genIcal = False):
+
+
+def use_image_input(image_path, genIcal=False):
     image_parser = ImageToTextParser()
     prompt_list = image_parser.parse_image(image_path)
     for prompt in prompt_list:
-            use_user_input(prompt, genIcal) 
+        use_user_input(prompt, genIcal)
 
 
 if __name__ == "__main__":
@@ -71,4 +75,4 @@ if __name__ == "__main__":
             else:
                 use_user_input(userin, genIcal=False)
         except Exception as e:
-            print(f"An error occurred: {e}") 
+            print(f"An error occurred: {e}")
