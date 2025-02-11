@@ -33,8 +33,7 @@ def parse_recurring_pattern(event) -> str:
 
         # Add recurrence end date if specified
         if event.recurrence_end_date:
-            recurrence_rule += f";UNTIL={
-                event.recurrence_end_date.strftime('%Y%m%d')}"
+            recurrence_rule += f";UNTIL={event.recurrence_end_date.strftime('%Y%m%d')}"
     else:
         recurrence_rule = None  # No recurrence
     return recurrence_rule
