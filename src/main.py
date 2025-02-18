@@ -45,4 +45,19 @@ async def upload(file: UploadFile = File(...)):
     with file_path.open("wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     
-    return {"file name": file.filename}
+    # return {"file name": file.filename}
+    parser = ImageToTextParser()
+    res = parser.parse_image(file_path)[0]
+
+    parser = TextToEventParser()
+    event = parser.parse_text(res)
+    event.set_gcal_link()
+    event.set_outlook_link()
+
+    try:
+        file_path.unlink()
+    except Exception as e:
+        print("ERROR: could not remove file")
+
+    print(event)
+    return event
