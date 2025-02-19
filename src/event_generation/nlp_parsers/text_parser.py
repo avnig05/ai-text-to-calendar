@@ -108,7 +108,8 @@ class TextToEventParser:
                             -- if the event is recurring, set this to true. and provide the recurrence pattern, if the pattern is not specified, assume it's a weekly event.
                             -- if the recurrence is not specified, assume it's a one-time event.
                         - recurrence_pattern: Optional[str]
-                            -- if the event is recurring, provide the recurrence pattern. otherwise, leave it null.
+                            -- if the event is recurring, provide the recurrence pattern. otherwise, leave it null
+                            -- if the event happens on mutliple but doesnt last all day, use the recurrence pattern WEEKLY and provide the days of the week it occurs on. and then have it end on the last day of the event.
                             -- recurrence patterns should only be in the following formats:
                                 ---DAILY, WEEKLY, MONTHLY, YEARLY
                         -recurrence_days: Optional[List[str]]

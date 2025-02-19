@@ -1,21 +1,19 @@
 import { CalendarEvent } from "@/app/types/CalendarEvent";
 
-export const generateEventFromText = async (
-	text: string
+export const generateEventFromImage = async (
+	img: File
 ): Promise<CalendarEvent> => {
 	try {
-		console.log("prompt", text);
+		console.log("file", img);
+
+		const formData = new FormData();
+		formData.append("file", img);
+
 		console.log("Sending request to backend");
-		const response = await fetch("http://127.0.0.1:8000/add-to-calendar", {
+		const response = await fetch("http://127.0.0.1:8000/upload", {
 			method: "POST",
 			// mode: "no-cors",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify({
-				event_body: text,
-				platform: "google",
-			}),
+			body: formData,
 		});
 
 		if (!response.ok) {
