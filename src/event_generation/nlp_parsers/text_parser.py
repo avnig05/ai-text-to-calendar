@@ -81,32 +81,44 @@ class TextToEventParser:
                         "content": f"""You are an AI that extracts structured event details from text.
                         The current time is: **{current_time}** and the current timezone is: **{current_time_zone}**. Use this to interpret relative dates.
 
-                        - If a date is relative (e.g., "tomorrow at 2pm"), convert it into an absolute datetime based on the current time.
-                        - If a date is given without a time (e.g., "March 15"), assume **the time is 00:00 (midnight)**.
-                        - If the date is given in a range (e.g., "March 15-17"), assume it's a multi-day event that with a starts on the first date and ends on the last date.
+                        - If a date is relative (e.g., "tomorrow at 2pm", "in two hours"), convert it into an absolute datetime based on the current time.
+                        - If a date is given without a time (e.g., "March 15"), assume it is an all day event and dont include the time.
+                        - If the date is given in a range (e.g., "March 15-17"), assume it's a multi-day repeating all day event that with a starts on the first date and ends on the last date.
                         - If only a time is given (e.g., "at 2pm"), assume **it refers to today** unless the event is clearly in the future.
+                        - If there appear to be multiple events in the text, extract all of them into separate events. But maintain details that apply to multiple events.
 
                         Extract and return in JSON format:
-
                         - title: str **a title is required never leave it null**
-                        - start_time: ISO 8601 datetime format (e.g., "20250130T232000") but only accurate to the minute, set seconds to 00 **a starttime is required never leave it null**
-                        - time_zone: str, representing the timezone of the event eg: "America/Los_Angeles" **a timezone is required never leave it null**
+                        - is_all_day: bool
+                            -- if the event is an all day event, set this to true. otherwise, set it to false.
+                        - start_time: ISO 8601 datetime format,
+                            -- **This field is required never leave it null**
+                            -- the time should only be accurate to the minute. Format: YYYYMMDDTHHMM00
+                            -- if it is an all day event then update the flag and dont include the time. Format: YYYMMDD
+                        - time_zone: str, 
+                            -- representing the timezone of the event eg: "America/Los_Angeles" **a timezone is required never leave it null**
                             -- default to none if not specified.
-                        - end_time: ISO 8601 datetime format (e.g., "20250130T232000") but only accurate to the minute, set seconds to 00 **an endtime is required never leave it null**
-                            -- if the end time is not specified, use context to make a best guess and assume that either the event is 1 hour long or is an all-day event ending at 23:59.
+                        - end_time: ISO 8601 datetime format,
+                            -- **This field is required never leave it null**
+                            -- the time should only be accurate to the minute. Format: YYYYMMDDTHHMM00
+                            -- if it is an all day event then update the flag and dont include the time. Format: YYYMMDD
+                            -- if the end time is not specified, use context to make a best guess and assume that either the event is 1 hour long or is an all-day event.
                             -- if the end time is specified without a date, assume it has the same date as the start time.
-                            -- if the date is given without a time, assume the event is an all-day event and ends at 23:59 on that date.
+                            -- if the date is given without a time, assume the event is an all-day event
                             -- if the duration is specified, calculate the end time based on the start time.
                         - description: Optional[str]
                             -- if any links are provided, include them in the description. with a quick summary of what they are.
-                            -- if there is no description provided and there is enough context to generate one, generate a description. otherwise leave it null
+                            -- if there is no description provided try to find context to generate a description. If no information is available, leave it null.
                         - location: Optional[str]
+                            -- inlclude even vague locations like "online" or "virtual" if they are provided.
+                            -- if there is no location provided, leave it null.
                         - attendees: Optional[List[str]]
                             -- if any email addresses are provided, include them in the attendees list.
                             -- if there are no email addresses provided leave it the list empty.
+                            -- if names are provided without email addresses, include the names in the description. but leave the attendees list empty.
                         - is_recurring: bool
                             -- if the event is recurring, set this to true. and provide the recurrence pattern, if the pattern is not specified, assume it's a weekly event.
-                            -- if the recurrence is not specified, assume it's a one-time event.
+                            -- if the recurrence is not specified, assume it's a one-time event and set is_reccuring to false.
                         - recurrence_pattern: Optional[str]
                             -- if the event is recurring, provide the recurrence pattern. otherwise, leave it null
                             -- if the event happens on mutliple but doesnt last all day, use the recurrence pattern WEEKLY and provide the days of the week it occurs on. and then have it end on the last day of the event.
@@ -122,6 +134,30 @@ class TextToEventParser:
                             -- if the event is recurring, provide the end date of the recurrence. otherwise, leave it null to indicate that the recurrence is indefinite.
 
                         If any field is missing, return null.
+                        
+                        here is an example of the JSON object you should return:
+                        
+                        request: Slug Ai Meeting every tuesday thursday at 5pm
+                        event:
+                        {{
+                            "events": [
+                            {{
+                                "title": "Slug Ai Meeting",
+                                "start_time": "20250220T170000",
+                                "time_zone": "America/Los_Angeles",
+                                "end_time": "20250220T180000",
+                                "description": None,
+                                "location": None,
+                                "attendees": [],
+                                "is_recurring": True,
+                                "recurrence_pattern": "WEEKLY",
+                                "recurrence_days": ["TU", "TH"],
+                                "recurrence_count": None,
+                                "recurrence_end_date": None
+                            }},
+                            ]
+                        }}
+
                         """,
                     },
                     {"role": "user", "content": text},
@@ -149,37 +185,40 @@ class TextToEventParser:
         # Parse the response from OpenAI API into a JSON object
         try:
             event_data = json.loads(response.choices[0].message.content)
-
             # Ensure required fields exist
-            if not event_data.get("title") or not event_data.get("start_time"):
-                raise ValueError(
-                    "Missing required fields: 'title' and/or 'start_time'")
-
+            event_list = []
             # Create Event object by parsing Json fields
-            event = Event(
-                title=event_data.get("title"),
-                start_time=parse_datetime(
-                    event_data.get("start_time")
-                ),  # Convert to datetime
-                time_zone=(
-                    str(current_time_zone)
-                    if not event_data.get("time_zone")
-                    else event_data.get("time_zone")
-                ),
-                end_time=parse_datetime(event_data.get("end_time")),
-                description=event_data.get("description", " "),
-                location=event_data.get("location", " "),
-                attendees=event_data.get("attendees", []),
-                is_recurring=event_data.get("is_recurring", False),
-                recurrence_pattern=event_data.get("recurrence_pattern"),
-                recurrence_days=event_data.get("recurrence_days"),
-                recurrence_count=event_data.get("recurrence_count"),
-                recurrence_end_date=(
-                    parse_datetime(event_data.get("recurrence_end_date"))
-                    if event_data.get("recurrence_end_date")
-                    else None
-                ),
-            )
+            for event in event_data["events"]:
+                if not event.get("title") or not event.get("start_time"):
+                    raise ValueError("Missing required fields: 'title' and/or 'start_time'")
+                new_event = Event(
+                    title=event.get("title"),
+                    is_all_day=event.get("is_all_day", False),
+                    start_time=parse_datetime(
+                        event.get("start_time")
+                    ),  # Convert to datetime
+                    time_zone=(
+                        str(current_time_zone)
+                        if not event.get("time_zone")
+                        else event.get("time_zone")
+                    ),
+                    end_time=parse_datetime(event.get("end_time")),
+                    description=event.get("description", " "),
+                    location=event.get("location", " "),
+                    attendees=event.get("attendees", []),
+                    is_recurring=event.get("is_recurring", False),
+                    recurrence_pattern=event.get("recurrence_pattern"),
+                    recurrence_days=event.get("recurrence_days"),
+                    recurrence_count=event.get("recurrence_count"),
+                    recurrence_end_date=(
+                        parse_datetime(event.get("recurrence_end_date"))
+                        if event.get("recurrence_end_date")
+                        else None
+                    ),
+                )
+                new_event.set_gcal_link()
+                new_event.set_outlook_link()
+                event_list.append(new_event)
 
         # Catch any errors gracefully
         except ValueError as ve:
@@ -198,4 +237,4 @@ class TextToEventParser:
             print(f"Unexpected error: {e}\n{error_trace}")
             return "An unexpected error occurred. Please check the logs."
 
-        return event
+        return event_list

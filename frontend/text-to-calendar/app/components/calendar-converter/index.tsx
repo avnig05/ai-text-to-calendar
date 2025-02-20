@@ -21,7 +21,7 @@ import mammoth from "mammoth";
  */
 export function CalendarConverter() {
   const [text, setText] = useState("");
-  const [generatedEvent, setGeneratedEvent] = useState<CalendarEvent | null>(null);
+  const [generatedEvents, setGeneratedEvents] = useState<CalendarEvent[]>([]);
   const [buttonLabel, setButtonLabel] = useState("Convert to Calendar Event");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -34,14 +34,14 @@ export function CalendarConverter() {
   const handleConvert = useCallback(async () => {
     setButtonLabel("Converting...");
     try {
-      let event: CalendarEvent | null = null;
+      let events: CalendarEvent[] = [];
       if (file && file.type.startsWith("image/")) {
-        event = await generateEventFromImage(file);
+        events = await generateEventFromImage(file);
       } else {
         // Includes .docx and .txt, or no file at all
-        event = await generateEventFromText(text);
+        events = await generateEventFromText(text);
       }
-      setGeneratedEvent(event);
+      setGeneratedEvents(events);
     } catch (error) {
       console.error("Error generating event:", error);
     } finally {
@@ -176,12 +176,17 @@ export function CalendarConverter() {
         </CardContent>
       </Card>
 
-      {generatedEvent && (
-        <Card className="w-full border-[#218F98] bg-white/95 shadow-sm relative">
+      {generatedEvents.length > 0 && (
+        <div className="space-y-6 w-full">
+        {generatedEvents.map((event, index) => (
+          <Card key={index} className="w-full border-[#218F98] bg-white/95 shadow-sm relative">
           <Sparkle position="right" />
-          <GeneratedEventDisplay event={generatedEvent} />
-        </Card>
+          <GeneratedEventDisplay event={event} />
+          </Card>
+        ))}
+        </div>
       )}
+
     </Container>
   );
 }

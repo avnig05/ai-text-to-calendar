@@ -42,14 +42,15 @@ def test_parse_text():
 
 def use_user_input(text, genIcal=False):
     parser = TextToEventParser()
-    parsed_event = parser.parse_text(text)
-    parsed_event.set_gcal_link()
-    parsed_event.set_outlook_link()
-    # parsed_event.set_yahoo_link()
-    print(f"\n\nParsed Event:\n{parsed_event}")
-    if genIcal:
-        print("\nsaving event to ics file...\n")
-        parsed_event.write_to_icalevent("test.ics")
+    parsed_event_list = parser.parse_text(text)
+    for parsed_event in parsed_event_list:
+        parsed_event.set_gcal_link()
+        parsed_event.set_outlook_link()
+        # parsed_event.set_yahoo_link()
+        print(f"\n\nParsed Event:\n{parsed_event}")
+        if genIcal:
+            print("\nsaving event to ics file...\n")
+            parsed_event.write_to_icalevent("test.ics")
 
 
 def use_image_input(image_path, genIcal=False):

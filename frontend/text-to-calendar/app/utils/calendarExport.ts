@@ -11,7 +11,7 @@ export const exportToOutlook = (event: CalendarEvent) => {
 };
 
 export const exportToAppleCalendar = (event: CalendarEvent) => {
-	const startTime = event.startTime
+	const startTime = event.start_time
 		.toISOString()
 		.replace(/-|:|\.\d\d\d/g, "");
 	const endTime = event.endTime.toISOString().replace(/-|:|\.\d\d\d/g, "");

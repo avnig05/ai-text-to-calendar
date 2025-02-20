@@ -10,6 +10,7 @@ from zoneinfo import ZoneInfo
 
 class Event(BaseModel):
     title: str = "No Title"
+    is_all_day: bool = False
     start_time: datetime = None
     time_zone: str = "America/Los_Angeles"
     end_time: Optional[datetime] = None
@@ -70,11 +71,19 @@ class Event(BaseModel):
         # &location=Porter%20Acad%20144
         # &ctz=America/Los_Angeles
         recurrence_rule = dp.parse_recurring_pattern(self)
+        
+        start = self.get_start_time()
+        end = self.get_end_time()
+        if self.is_all_day:
+            # first 8 characters of the date string
+            # YYYYMMDD
+            start = start[:8]
+            end = end[:8]
 
         gcal_link = (
             f"https://www.google.com/calendar/render?action=TEMPLATE"
             f"&text={self.title}"
-            f"&dates={self.get_start_time()}/{self.get_end_time()}"
+            f"&dates={start}/{end}"
         )
         if self.description:
             gcal_link += f"&details={self.description}"
@@ -98,8 +107,7 @@ class Event(BaseModel):
         # Ensure proper datetime format for outlook links (ISO 8601)
         # Parse the non-standard date string using strptime:
         sdt = datetime.strptime(self.get_start_time(), "%Y%m%dT%H%M%S")
-        edt = datetime.strptime(self.get_end_time(), "%Y%m%dT%H%M%S")
-
+        edt = datetime.strptime(self.get_start_time(), "%Y%m%dT%H%M%S")
         # Convert the time to UTC
         # (this assumes that the parsed datetime is in the local timezone)
         utc_sdt = sdt.astimezone(ZoneInfo("UTC"))
@@ -136,10 +144,18 @@ class Event(BaseModel):
         self.outlook_link = outlook_link
 
     def get_start_time(self):
+        # if it's an all day event then dont include the time so that gcal marks it as "all day"
+        # if self.is_all_day:
+        #     start_str = self.start_time.strftime("%Y%m%d")
+        # else:
+        
         start_str = self.start_time.strftime("%Y%m%dT%H%M%S")
         return start_str
 
     def get_end_time(self):
+        # if self.is_all_day:
+        #     end_str = self.end_time.strftime("%Y%m%d")
+        # else:
         end_str = self.end_time.strftime("%Y%m%dT%H%M%S")
         return end_str
 
@@ -149,6 +165,7 @@ class Event(BaseModel):
 
     def __str__(self):
         event_str = f"Title: {self.title}\n"
+        event_str += f"Is All Day: {self.is_all_day}\n"
         event_str += f"Start Time: {self.start_time}\n"
         event_str += f"End Time: {self.end_time}\n"
         event_str += f"Time Zone: {self.time_zone}\n"

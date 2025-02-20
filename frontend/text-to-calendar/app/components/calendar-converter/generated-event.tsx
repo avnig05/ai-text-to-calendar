@@ -12,9 +12,10 @@ interface GeneratedEventDisplayProps {
 
 export function GeneratedEventDisplay({ event }: GeneratedEventDisplayProps) {
   const formatDateTime = (date: string) => {
+    console.log("Date:", date)
     const parsed = parseISO(date)
     if (!isValid(parsed)) {
-      console.error("Invalid date:", date)
+      console.log("Invalid date:", date)
       return "Invalid date"
     }
     return format(parsed, "yyyy-MM-dd HH:mm")
