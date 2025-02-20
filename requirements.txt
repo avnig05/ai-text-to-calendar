@@ -19,6 +19,7 @@ tzlocal==5.2
 # Utilities
 python-dotenv==1.0.1
 requests==2.31.0
+python-multipart
 
 # Testing (Optional)
 pytest==8.0.0
