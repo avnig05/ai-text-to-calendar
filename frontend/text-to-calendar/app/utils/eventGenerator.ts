@@ -5,7 +5,7 @@ export const generateEventFromText = async (text: string): Promise<CalendarEvent
 	try {
 		console.log("prompt", text);
 		console.log("Sending request to backend");
-		const response = await fetch("api.calendarize.ratcliff.cc/add-to-calendar", {
+		const response = await fetch("https://api.calendarize.ratcliff.cc/add-to-calendar", {
 			method: "POST",
 			// mode: "no-cors",
 			headers: {
@@ -88,7 +88,7 @@ export const generateEventFromImage = async (img: File): Promise<CalendarEvent[]
 		formData.append("file", img);
 
 		console.log("Sending request to backend");
-		const response = await fetch("api.calendarize.ratcliff.cc/upload", {
+		const response = await fetch("https://api.calendarize.ratcliff.cc/upload", {
 			method: "POST",
 			// mode: "no-cors",
 			body: formData,
