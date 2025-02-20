@@ -88,7 +88,7 @@ export const generateEventFromImage = async (img: File): Promise<CalendarEvent[]
 		formData.append("file", img);
 
 		console.log("Sending request to backend");
-		const response = await fetch("http://127.0.0.1:8000/upload", {
+		const response = await fetch("api.calendarize.ratcliff.cc/upload", {
 			method: "POST",
 			// mode: "no-cors",
 			body: formData,
