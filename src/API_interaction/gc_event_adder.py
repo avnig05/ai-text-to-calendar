@@ -1,69 +1,95 @@
+from flask import Flask, make_response, request, redirect, url_for
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
-import os.path
 from datetime import datetime
+import json
+
+app = Flask(__name__)
 
 # Define the scopes (permissions) your app needs
 SCOPES = ['https://www.googleapis.com/auth/calendar.events']
 
+# Helper function to authenticate the user
 def authenticate_google():
     creds = None
-    # Check if token.json exists (saved credentials)
-    if os.path.exists('token.json'):
-        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+    
+    # Check if the token exists in the cookie
+    token_json = request.cookies.get('google_auth_token')
+    if token_json:
+        creds = Credentials.from_authorized_user_info(json.loads(token_json), SCOPES)
+    
     # If no valid credentials, prompt the user to log in
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
-    'client_secret_1076750959595-6p8sn7uflm3r6bc8h2ed3un9r0d7o5ni.apps.googleusercontent.com.json', SCOPES)
-            # Set the redirect URI explicitly
-            flow.redirect_uri = 'http://localhost:3000'
-            creds = flow.run_local_server(port=3000)  
-        # Save the credentials for future use
-        with open('token.json', 'w') as token:
-            token.write(creds.to_json())
+                'client_secret.json', SCOPES)
+            flow.redirect_uri = 'http://localhost:5000/callback'  # Use backend callback for testing
+            creds = flow.run_local_server(port=5000)
+        
+        # Save the credentials in a secure cookie
+        response = make_response("Authentication successful!")
+        response.set_cookie(
+            'google_auth_token',
+            value=creds.to_json(),
+            secure=False,        # Set to False for local testing (no HTTPS)
+            httponly=True,      # Prevent JavaScript access
+            samesite='Strict',  # Prevent CSRF attacks
+            max_age=3600        # 1 hour expiration
+        )
+        return response
+    
     return creds
 
-def add_event_to_calendar(creds, event_name, start_time, end_time):
-    service = build('calendar', 'v3', credentials=creds)
+# Route to start the OAuth flow
+@app.route('/login')
+def login():
+    return authenticate_google()
 
+# Route to handle the OAuth callback
+@app.route('/callback')
+def callback():
+    return authenticate_google()
+
+# Route to add an event to Google Calendar
+@app.route('/add-event')
+def add_event():
+    token_json = request.cookies.get('google_auth_token')
+    if not token_json:
+        return "Not authenticated", 401
+    
+    creds = Credentials.from_authorized_user_info(json.loads(token_json), SCOPES)
+    if not creds or not creds.valid:
+        return "Invalid or expired credentials", 401
+    
+    # Add event logic
+    service = build('calendar', 'v3', credentials=creds)
+    
     event = {
-        'summary': event_name,
+        'summary': 'Test Event',
         'start': {
-            'dateTime': start_time.isoformat(),
-            'timeZone': 'America/Los_Angeles',  # Adjust to your timezone
+            'dateTime': datetime.now().isoformat(),
+            'timeZone': 'America/Los_Angeles',
         },
         'end': {
-            'dateTime': end_time.isoformat(),
+            'dateTime': datetime.now().isoformat(),
             'timeZone': 'America/Los_Angeles',
         },
     }
-
+    
     event = service.events().insert(calendarId='primary', body=event).execute()
-    print(f"Event created: {event.get('htmlLink')}")
+    return f"Event created: {event.get('htmlLink')}"
 
-def main():
-    # Step 1: Authenticate the user
-    creds = authenticate_google()
-    print('Authenticated successfully!')
-    # Step 2: Define event details (for testing)
-    event_name = "Test Event"
-    start_time = "2024-10-10T19:00:00-07:00"  # Replace with your desired start time
-    end_time = "2024-10-10T20:00:00-07:00"    # Replace with your desired end time
+# Route to log out and clear the cookie
+@app.route('/logout')
+def logout():
+    response = make_response("Logged out successfully!")
+    response.set_cookie('google_auth_token', '', expires=0)  # Clear the cookie
+    return response
 
-
-
-    start_time = datetime.fromisoformat(start_time)  # Convert string to datetime
-    end_time = datetime.fromisoformat(end_time)    # Convert string to datetime
-
-
-
-    # Step 3: Add the event to Google Calendar
-    add_event_to_calendar(creds, event_name, start_time, end_time)
-    print ("Event added to calendar successfully!")
+# Run the Flask app
 if __name__ == '__main__':
-    main()
+    app.run(port=5000)
