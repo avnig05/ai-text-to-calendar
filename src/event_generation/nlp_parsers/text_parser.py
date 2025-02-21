@@ -86,6 +86,7 @@ class TextToEventParser:
                         - If the date is given in a range (e.g., "March 15-17"), assume it's a multi-day repeating all day event that with a starts on the first date and ends on the last date.
                         - If the time is given in a range (e.g., 2-4pm) use the first part of the range as the start_time (eg: 2pm) and the second part as the end_time (eg: 4pm).
                         - If only a time is given (e.g., "at 2pm"), assume **it refers to today** unless the event is clearly in the future.
+                        - 24:00 is not a valid time always default to use 23:59 instead.
                         - If there appear to be multiple events in the text, extract all of them into separate events. But maintain details that apply to multiple events.
 
                         Extract and return in JSON format:
@@ -107,7 +108,7 @@ class TextToEventParser:
                             -- if the end time is specified without a date, assume it has the same date as the start time.
                             -- if the date is given without a time, assume the event is an all-day event
                             -- if the duration is specified, calculate the end time based on the start time.
-                            -- if the event ends at midight (12am) adjust the end time to be 23:59:59 since 12am is the start of the next day.
+                            -- if the event ends at midight (12am) adjust the end time to be 23:59:00
                         - description: Optional[str]
                             -- if any links are provided, include them in the description. with a quick summary of what they are.
                             -- if there is no description provided try to find context to generate a description. If no information is available, leave it null.
