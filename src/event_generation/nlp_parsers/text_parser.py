@@ -84,6 +84,7 @@ class TextToEventParser:
                         - If a date is relative (e.g., "tomorrow at 2pm", "in two hours"), convert it into an absolute datetime based on the current time.
                         - If a date is given without a time (e.g., "March 15"), assume it is an all day event and dont include the time.
                         - If the date is given in a range (e.g., "March 15-17"), assume it's a multi-day repeating all day event that with a starts on the first date and ends on the last date.
+                        - If the time is given in a range (e.g., 2-4pm) use the first part of the range as the start_time (eg: 2pm) and the second part as the end_time (eg: 4pm).
                         - If only a time is given (e.g., "at 2pm"), assume **it refers to today** unless the event is clearly in the future.
                         - If there appear to be multiple events in the text, extract all of them into separate events. But maintain details that apply to multiple events.
 
@@ -99,13 +100,14 @@ class TextToEventParser:
                             -- representing the timezone of the event eg: "America/Los_Angeles" **a timezone is required never leave it null**
                             -- default to none if not specified.
                         - end_time: ISO 8601 datetime format,
-                            -- **This field is required never leave it null**
+                            -- **This field is required never leave it null, if you are at all unsure defualt to 1 hour afte start_time**
                             -- the time should only be accurate to the minute. Format: YYYYMMDDTHHMM00
                             -- if it is an all day event then update the flag and dont include the time. Format: YYYMMDD
                             -- if the end time is not specified, use context to make a best guess and assume that either the event is 1 hour long or is an all-day event.
                             -- if the end time is specified without a date, assume it has the same date as the start time.
                             -- if the date is given without a time, assume the event is an all-day event
                             -- if the duration is specified, calculate the end time based on the start time.
+                            -- if the event ends at midight (12am) adjust the end time to be 23:59:59 since 12am is the start of the next day.
                         - description: Optional[str]
                             -- if any links are provided, include them in the description. with a quick summary of what they are.
                             -- if there is no description provided try to find context to generate a description. If no information is available, leave it null.
@@ -189,6 +191,7 @@ class TextToEventParser:
             event_list = []
             # Create Event object by parsing Json fields
             for event in event_data["events"]:
+                print("Event: ", event)
                 if not event.get("title") or not event.get("start_time"):
                     raise ValueError("Missing required fields: 'title' and/or 'start_time'")
                 new_event = Event(
@@ -216,6 +219,7 @@ class TextToEventParser:
                         else None
                     ),
                 )
+                print("New Event: ", new_event)
                 new_event.set_gcal_link()
                 new_event.set_outlook_link()
                 event_list.append(new_event)
@@ -233,8 +237,7 @@ class TextToEventParser:
 
         except Exception as e:
             error_trace = traceback.format_exc()  # Capture full stack trace
-            logging.error("Unexpected Error: %s\n%s", e, error_trace)
-            print(f"Unexpected error: {e}\n{error_trace}")
+            logging.error("Unexpected Error: %s %s", e, error_trace)
             return "An unexpected error occurred. Please check the logs."
 
         return event_list
