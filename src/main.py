@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from event_generation.nlp_parsers.text_parser import TextToEventParser
 from event_generation.nlp_parsers.image_parser import ImageToTextParser
+from fastapi.responses import JSONResponse
 # from event_generation.event.event import Event
 
 
@@ -17,9 +18,13 @@ app = FastAPI()
 UPLOAD_FOLDER = Path("uploads")
 UPLOAD_FOLDER.mkdir(exist_ok=True)
 
+@app.head("/")
+async def health_check():
+    return JSONResponse(content={"status": "ok"})
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all domains for now (change in production)
+    allow_origins=["https://calendarize.tech"],  # Allow all domains for now (change in production)
     allow_credentials=True,
     allow_methods=["*"],  # Allow all methods (GET, POST, etc.)
     allow_headers=["*"],  # Allow all headers
