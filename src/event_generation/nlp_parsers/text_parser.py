@@ -65,10 +65,11 @@ class TextToEventParser:
                 # Format as YYYY-MM-DD HH:MM:SS       print("sending request to OpenAI API: ", text)
             )
             current_time_zone = tz.get_localzone()
+            current_day = datetime.today().strftime('%A')
 
             print("\nsending request to OpenAI API: ", text)
             print()
-            print("current time is: ", current_time)
+            print("current time is: ", current_time, "the current day is: ", current_day)
             print(f"Current Timezone: {current_time_zone}")
             print()
 
@@ -79,7 +80,7 @@ class TextToEventParser:
                     {
                         "role": "system",
                         "content": f"""You are an AI that extracts structured event details from text.
-                        The current time is: **{current_time}** and the current timezone is: **{current_time_zone}**. Use this to interpret relative dates.
+                        The current time is: **{current_time}**, the current day is **{current_day}**, and the current timezone is: **{current_time_zone}**. Use this to interpret relative dates. It is important to calculate the relative dates using the year: 2025
 
                         - If a date is relative (e.g., "tomorrow at 2pm", "in two hours"), convert it into an absolute datetime based on the current time.
                         - If a date is given without a time (e.g., "March 15"), assume it is an all day event and dont include the time.
