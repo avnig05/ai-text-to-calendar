@@ -1,7 +1,7 @@
 import { CalendarEvent } from "@/app/types/CalendarEvent";
 
 // Use environment variable with fallback
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://ai-text-to-calendar-ju8f.onrender.com';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.calendarize.ratcliff.cc/add-to-calendar';
 
 // Function to generate an event from text input
 export const generateEventFromText = async (text: string): Promise<CalendarEvent[]> => {
@@ -91,6 +91,7 @@ export const generateEventFromImage = async (img: File): Promise<CalendarEvent[]
 		const formData = new FormData();
 		formData.append("file", img);
 
+    console.log("Sending request to backend");
 		const response = await fetch(`${API_BASE_URL}/upload`, {
 			method: "POST",
 			// mode: "no-cors",
