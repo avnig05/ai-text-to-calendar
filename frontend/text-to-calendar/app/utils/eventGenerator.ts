@@ -21,15 +21,14 @@ export const generateEventFromText = async (text: string): Promise<CalendarEvent
 		});
 		
 		if (!response.ok) {
-			console.log("bad responce");
-			console.log(response);
+			console.log("bad response", response);
 			return [
 				{
 				title: "Sample Event",
 				description: "This is a sample event created from the input text.",
-				start_time: "YYYY-MM-DDTHH:MM:SS",
+				start_time: "",
 				time_zone: "America/Los_Angeles",
-				end_time: "YYYY-MM-DDTHH:MM:SS",
+				end_time: "",
 				gcal_link: "",
 				outlook_link: "",
 				},
@@ -74,9 +73,9 @@ export const generateEventFromText = async (text: string): Promise<CalendarEvent
 			{
 			title: "Sample Event",
 			description: "This is a sample event created from the input text.",
-			start_time: "YYYY-MM-DDTHH:MM:SS",
+			start_time: "",
 			time_zone: "America/Los_Angeles",
-			end_time: "YYYY-MM-DDTHH:MM:SS",
+			end_time: "Y",
 			gcal_link: "",
 			outlook_link: "",
 			},
@@ -105,9 +104,9 @@ export const generateEventFromImage = async (img: File): Promise<CalendarEvent[]
 				{
 				title: "Sample Event",
 				description: "This is a sample event created from the input text.",
-				start_time: "YYYY-MM-DDTHH:MM:SS",
+				start_time: "",
 				time_zone: "America/Los_Angeles",
-				end_time: "YYYY-MM-DDTHH:MM:SS",
+				end_time: "",
 				gcal_link: "",
 				outlook_link: "",
 				},
@@ -142,9 +141,9 @@ export const generateEventFromImage = async (img: File): Promise<CalendarEvent[]
 				{
 				title: "Sample Event",
 				description: "This is a sample event created from the input text.",
-				start_time: "YYYY-MM-DDTHH:MM:SS",
+				start_time: "",
 				time_zone: "America/Los_Angeles",
-				end_time: "YYYY-MM-DDTHH:MM:SS",
+				end_time: "",
 				gcal_link: "",
 				outlook_link: "",
 				},
