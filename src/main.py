@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from event_generation.nlp_parsers.text_parser import TextToEventParser
 from event_generation.nlp_parsers.image_parser import ImageToTextParser
 from fastapi.responses import JSONResponse
+import datetime
 # from event_generation.event.event import Event
 
 
@@ -17,6 +18,10 @@ class CalendarRequest(BaseModel):
 app = FastAPI()
 UPLOAD_FOLDER = Path("uploads")
 UPLOAD_FOLDER.mkdir(exist_ok=True)
+
+@app.get("/current-year")
+def get_current_year():
+    return {"year": datetime.datetime.utcnow().year}
 
 @app.head("/")
 async def health_check():
