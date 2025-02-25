@@ -20,9 +20,6 @@ export const generateEventFromText = async (text: string): Promise<CalendarEvent
 			}),
 		});
 		
-		const data = await response.json();
-		console.log("Response data:", data);
-
 		if (!response.ok) {
 			return [
 				{
