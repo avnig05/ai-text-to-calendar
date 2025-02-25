@@ -29,7 +29,7 @@ async def health_check():
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://calendarize.tech"],  # Allow all domains for now (change in production)
+    allow_origins=["https://calendarize.ratcliff.cc"],  # Allow all domains for now (change in production)
     allow_credentials=True,
     allow_methods=["*"],  # Allow all methods (GET, POST, etc.)
     allow_headers=["*"],  # Allow all headers
