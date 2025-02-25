@@ -21,6 +21,8 @@ export const generateEventFromText = async (text: string): Promise<CalendarEvent
 		});
 		
 		if (!response.ok) {
+			console.log("bad responce");
+			console.log(response);
 			return [
 				{
 				title: "Sample Event",
