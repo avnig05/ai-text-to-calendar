@@ -7,8 +7,8 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.calendarize
 export const generateEventFromText = async (text: string): Promise<CalendarEvent[]> => {
 	try {
 		console.log("prompt", text);
-		console.log("Sending request to backend:", `${API_BASE_URL}/add-to-calendar/`;
-		const response = await fetch(`${API_BASE_URL}/add-to-calendar/`, {
+		console.log("Sending request to backend:", API_BASE_URL, "add-to-calendar");
+		const response = await fetch(`${API_BASE_URL}/add-to-calendar`, {
 			method: "POST",
 			// mode: "no-cors",
 			headers: {
@@ -89,7 +89,7 @@ export const generateEventFromText = async (text: string): Promise<CalendarEvent
 export const generateEventFromImage = async (img: File): Promise<CalendarEvent[]> => {
 	try {
 		console.log("file", img);
-		console.log("Sending request to backend:", API_BASE_URL);
+		console.log("Sending request to backend:", API_BASE_URL,"/upload");
 
 		const formData = new FormData();
 		formData.append("file", img);
