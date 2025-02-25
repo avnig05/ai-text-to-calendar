@@ -7,7 +7,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.calendarize
 export const generateEventFromText = async (text: string): Promise<CalendarEvent[]> => {
 	try {
 		console.log("prompt", text);
-		console.log("Sending request to backend:", API_BASE_URL);
+		console.log("Sending request to backend:", `${API_BASE_URL}/add-to-calendar/`;
 		const response = await fetch(`${API_BASE_URL}/add-to-calendar/`, {
 			method: "POST",
 			// mode: "no-cors",
@@ -19,6 +19,9 @@ export const generateEventFromText = async (text: string): Promise<CalendarEvent
 				platform: "google",
 			}),
 		});
+		
+		const data = await response.json();
+		console.log("Response data:", data);
 
 		if (!response.ok) {
 			return [
