@@ -8,7 +8,7 @@ export const generateEventFromText = async (text: string): Promise<CalendarEvent
 	try {
 		console.log("prompt", text);
 		console.log("Sending request to backend:", API_BASE_URL, "add-to-calendar");
-		const response = await fetch(`${API_BASE_URL}/add-to-calendar`, {
+		const response = await fetch('https://api.calendarize.ratcliff.cc/add-to-calendar', {
 			method: "POST",
 			// mode: "no-cors",
 			headers: {
