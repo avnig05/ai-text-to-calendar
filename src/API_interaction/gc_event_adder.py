@@ -5,11 +5,19 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from datetime import datetime, timedelta
 import json
+import os
 
 app = FastAPI()
 
 # Define the scopes (permissions) your app needs
 SCOPES = ['https://www.googleapis.com/auth/calendar.events']
+
+# Get the absolute path to the client_secret.json file
+CLIENT_SECRET_PATH = os.path.join(os.path.dirname(__file__), 'client_secret.json')
+print(f"Looking for client_secret.json at: {CLIENT_SECRET_PATH}")
+
+# Print the current working directory
+print(f"Current working directory: {os.getcwd()}")
 
 # Helper function to authenticate the user
 def authenticate_google(request: Request, response: Response):
@@ -26,9 +34,10 @@ def authenticate_google(request: Request, response: Response):
             creds.refresh(GoogleRequest())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
-                'client_secret.json', SCOPES)
-            flow.redirect_uri = 'http://localhost:8000/callback'  # Use backend callback for testing
-            creds = flow.run_local_server(port=8000)
+                CLIENT_SECRET_PATH, SCOPES)  # Use the absolute path
+            flow.redirect_uri = 'http://localhost:8004/callback'  # Update the port to 8004
+            print(f"Using redirect_uri: {flow.redirect_uri}")
+            creds = flow.run_local_server(port=8004)
         
         # Save the credentials in a secure cookie
         response.set_cookie(
@@ -54,12 +63,6 @@ async def login(request: Request, response: Response):
 async def callback(request: Request, response: Response):
     creds = authenticate_google(request, response)
     return {"message": "Callback handled successfully!"}
-
-
-@app.get('/test')
-async def test():
-    print('test completed successfully')
-
 
 # Route to add an event to Google Calendar
 @app.get('/add-event')
@@ -99,4 +102,4 @@ async def logout(response: Response):
 # Run the FastAPI app
 if __name__ == '__main__':
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8004)
