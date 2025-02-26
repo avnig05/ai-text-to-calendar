@@ -1,14 +1,14 @@
 import { CalendarEvent } from "@/app/types/CalendarEvent";
 
 // Use environment variable with fallback
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://ai-text-to-calendar-ju8f.onrender.com';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.calendarize.ratcliff.cc';
 
 // Function to generate an event from text input
 export const generateEventFromText = async (text: string): Promise<CalendarEvent[]> => {
 	try {
 		console.log("prompt", text);
-		console.log("Sending request to backend:", API_BASE_URL);
-		const response = await fetch(`${API_BASE_URL}/add-to-calendar`, {
+		console.log("Sending request to backend:", API_BASE_URL, "add-to-calendar");
+		const response = await fetch('https://api.calendarize.ratcliff.cc/add-to-calendar', {
 			method: "POST",
 			// mode: "no-cors",
 			headers: {
@@ -19,15 +19,16 @@ export const generateEventFromText = async (text: string): Promise<CalendarEvent
 				platform: "google",
 			}),
 		});
-
+		
 		if (!response.ok) {
+			console.log("bad response", response);
 			return [
 				{
 				title: "Sample Event",
 				description: "This is a sample event created from the input text.",
-				start_time: "YYYY-MM-DDTHH:MM:SS",
+				start_time: "",
 				time_zone: "America/Los_Angeles",
-				end_time: "YYYY-MM-DDTHH:MM:SS",
+				end_time: "",
 				gcal_link: "",
 				outlook_link: "",
 				},
@@ -72,9 +73,9 @@ export const generateEventFromText = async (text: string): Promise<CalendarEvent
 			{
 			title: "Sample Event",
 			description: "This is a sample event created from the input text.",
-			start_time: "YYYY-MM-DDTHH:MM:SS",
+			start_time: "",
 			time_zone: "America/Los_Angeles",
-			end_time: "YYYY-MM-DDTHH:MM:SS",
+			end_time: "Y",
 			gcal_link: "",
 			outlook_link: "",
 			},
@@ -86,11 +87,12 @@ export const generateEventFromText = async (text: string): Promise<CalendarEvent
 export const generateEventFromImage = async (img: File): Promise<CalendarEvent[]> => {
 	try {
 		console.log("file", img);
-		console.log("Sending request to backend:", API_BASE_URL);
+		console.log("Sending request to backend:", API_BASE_URL,"/upload");
 
 		const formData = new FormData();
 		formData.append("file", img);
 
+    console.log("Sending request to backend");
 		const response = await fetch(`${API_BASE_URL}/upload`, {
 			method: "POST",
 			// mode: "no-cors",
@@ -102,9 +104,9 @@ export const generateEventFromImage = async (img: File): Promise<CalendarEvent[]
 				{
 				title: "Sample Event",
 				description: "This is a sample event created from the input text.",
-				start_time: "YYYY-MM-DDTHH:MM:SS",
+				start_time: "",
 				time_zone: "America/Los_Angeles",
-				end_time: "YYYY-MM-DDTHH:MM:SS",
+				end_time: "",
 				gcal_link: "",
 				outlook_link: "",
 				},
@@ -139,9 +141,9 @@ export const generateEventFromImage = async (img: File): Promise<CalendarEvent[]
 				{
 				title: "Sample Event",
 				description: "This is a sample event created from the input text.",
-				start_time: "YYYY-MM-DDTHH:MM:SS",
+				start_time: "",
 				time_zone: "America/Los_Angeles",
-				end_time: "YYYY-MM-DDTHH:MM:SS",
+				end_time: "",
 				gcal_link: "",
 				outlook_link: "",
 				},
