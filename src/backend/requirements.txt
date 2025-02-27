@@ -2,6 +2,7 @@
 fastapi==0.115.8
 uvicorn==0.34.0
 pydantic==2.10.6
+# python-multipart==0.0.9  # Required for form data handling (file uploads)
 
 # OpenAI Integration
 openai==1.61.0
@@ -19,6 +20,10 @@ tzlocal==5.2
 # Utilities
 python-dotenv==1.0.1
 requests==2.31.0
+python-multipart
+
+# Image Handling (Optional, only if needed for image parsing)
+# pillow==10.2.0
 
 # Testing (Optional)
 pytest==8.0.0

@@ -1,23 +1,30 @@
 import uuid
 from datetime import datetime
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import event_generation.event.date_parser as dp
-from icalendar import Calendar, Event as IcalEvent  # vRecur
+from icalendar import Event as IcalEvent  # vRecur
 from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
 
 class Event(BaseModel):
+    # pydantic model for event data
+    # allows easy packing and unpacking into JSON
+    # event.json()
+
+    # Mandatory fields:
     title: str = "No Title"
-    is_all_day: bool = False
-    start_time: datetime = None
     time_zone: str = "America/Los_Angeles"
-    end_time: Optional[datetime] = None
+    start_time: datetime = Field(default_factory=datetime.now)
+    end_time: datetime = Field(default_factory=datetime.now)
+    is_all_day: bool = False
+    is_recurring: bool = False
+
+    # Optional fields:
     description: Optional[str] = None
     location: Optional[str] = None
     attendees: Optional[List[str]] = None
-    is_recurring: bool = False
     recurrence_pattern: Optional[str] = ""
     recurrence_days: Optional[List[str]] = None
     recurrence_count: Optional[int] = None
@@ -26,20 +33,16 @@ class Event(BaseModel):
     outlook_link: Optional[str] = None
     yahoo_link: Optional[str] = None
 
-    def write_to_icalevent(self, file_name: str):
-        cal = Calendar()  # Create a calendar object
-        cal.add("prodid", "-//My Event Calendar//mxm.dk//")
-        cal.add("version", "2.0")
-
+    def write_to_icalevent(self, calendar):
+        cal = calendar
         event = IcalEvent()  # Create an event object
         event.add("summary", self.title)
-        event.add("dtstart", self.start_time)
-        event.add("dtend", self.end_time if self.end_time else self.start_time)
+        event.add("dtstart", self.get_start_time())
+        event.add("dtend", self.get_end_time())
         event.add("dtstamp", datetime.now())
         event.add("location", self.location if self.location else "No Location")
-        event.add(
-            "description", self.description if self.description else "No Description"
-        )
+        if self.description:
+            event.add("description", self.description)
         # Ensure a globally unique event ID
         event.add("uid", str(uuid.uuid4()))
 
@@ -56,12 +59,6 @@ class Event(BaseModel):
         # Add the event to the calendar
         cal.add_component(event)
 
-        # Save the calendar to an .ics file
-        with open(file_name, "wb") as f:
-            f.write(cal.to_ical())
-
-        print(f"iCalendar file created: {file_name}")
-
     def set_gcal_link(self):
         # parsed_event.write_to_icalevent("test.ics")
         # https://calendar.google.com/calendar/render?action=TEMPLATE
@@ -71,7 +68,7 @@ class Event(BaseModel):
         # &location=Porter%20Acad%20144
         # &ctz=America/Los_Angeles
         recurrence_rule = dp.parse_recurring_pattern(self)
-        
+
         start = self.get_start_time()
         end = self.get_end_time()
         if self.is_all_day:
@@ -148,7 +145,7 @@ class Event(BaseModel):
         # if self.is_all_day:
         #     start_str = self.start_time.strftime("%Y%m%d")
         # else:
-        
+
         start_str = self.start_time.strftime("%Y%m%dT%H%M%S")
         return start_str
 
@@ -166,18 +163,27 @@ class Event(BaseModel):
     def __str__(self):
         event_str = f"Title: {self.title}\n"
         event_str += f"Is All Day: {self.is_all_day}\n"
-        event_str += f"Start Time: {self.start_time}\n"
-        event_str += f"End Time: {self.end_time}\n"
+        if not self.is_all_day:
+            event_str += f"Start Time: {self.start_time}\n"
+            event_str += f"End Time: {self.end_time}\n"
         event_str += f"Time Zone: {self.time_zone}\n"
-        event_str += f"Description: {self.description}\n"
-        event_str += f"Location: {self.location}\n"
-        event_str += f"Attendees: {self.attendees}\n"
+        if self.description:
+            event_str += f"Description: {self.description}\n"
+        if self.location:
+            event_str += f"Location: {self.location}\n"
+        if self.attendees:
+            event_str += f"Attendees: {self.attendees}\n"
         event_str += f"Is Recurring: {self.is_recurring}\n"
-        event_str += f"Recurrence Pattern: {self.recurrence_pattern}\n"
-        event_str += f"Recurrence Days: {self.recurrence_days}\n"
-        event_str += f"Recurrence Count: {self.recurrence_count}\n"
-        event_str += f"Recurrence End Date: {self.recurrence_end_date}\n"
-        event_str += f"Google Calendar Link: {self.gcal_link}\n"
-        event_str += f"Outlook Calendar Link: {self.outlook_link}\n"
-        event_str += f"Yahoo Calendar Link: {self.yahoo_link}\n"
+        if self.is_recurring:
+            event_str += f"Recurrence Pattern: {self.recurrence_pattern}\n"
+            event_str += f"Recurrence Days: {self.recurrence_days}\n"
+            event_str += f"Recurrence Count: {self.recurrence_count}\n"
+            event_str += f"Recurrence End Date: {self.recurrence_end_date}\n"
+        if self.gcal_link:
+            event_str += f"Google Calendar Link: {self.gcal_link}\n\n"
+        if self.outlook_link:
+            event_str += f"Outlook Calendar Link: {self.outlook_link}\n\n"
+        if self.yahoo_link:
+            event_str += f"Yahoo Calendar Link: {self.yahoo_link}\n\n"
+
         return event_str
