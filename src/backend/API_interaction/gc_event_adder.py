@@ -19,15 +19,16 @@ print(f"Looking for client_secret.json at: {CLIENT_SECRET_PATH}")
 # Print the current working directory
 print(f"Current working directory: {os.getcwd()}")
 
+
 # Helper function to authenticate the user
 def authenticate_google(request: Request, response: Response):
     creds = None
-    
+
     # Check if the token exists in the cookie
     token_json = request.cookies.get('google_auth_token')
     if token_json:
         creds = Credentials.from_authorized_user_info(json.loads(token_json), SCOPES)
-    
+
     # If no valid credentials, prompt the user to log in
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
@@ -38,7 +39,7 @@ def authenticate_google(request: Request, response: Response):
             flow.redirect_uri = 'http://localhost:8004/callback'  # Update the port to 8004
             print(f"Using redirect_uri: {flow.redirect_uri}")
             creds = flow.run_local_server(port=8004)
-        
+
         # Save the credentials in a secure cookie
         response.set_cookie(
             key='google_auth_token',
@@ -49,20 +50,22 @@ def authenticate_google(request: Request, response: Response):
             max_age=3600        # 1 hour expiration
         )
         return creds
-    
     return creds
+
 
 # Route to start the OAuth flow
 @app.get('/login')
 async def login(request: Request, response: Response):
-    creds = authenticate_google(request, response)
+    authenticate_google(request, response)
     return {"message": "Authentication successful!"}
+
 
 # Route to handle the OAuth callback
 @app.get('/callback')
 async def callback(request: Request, response: Response):
-    creds = authenticate_google(request, response)
+    authenticate_google(request, response)
     return {"message": "Callback handled successfully!"}
+
 
 # Route to add an event to Google Calendar
 @app.get('/add-event')
@@ -70,14 +73,14 @@ async def add_event(request: Request):
     token_json = request.cookies.get('google_auth_token')
     if not token_json:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    
+
     creds = Credentials.from_authorized_user_info(json.loads(token_json), SCOPES)
     if not creds or not creds.valid:
         raise HTTPException(status_code=401, detail="Invalid or expired credentials")
-    
+
     # Add event logic
     service = build('calendar', 'v3', credentials=creds)
-    
+
     event = {
         'summary': 'Test Event',
         'start': {
@@ -89,9 +92,10 @@ async def add_event(request: Request):
             'timeZone': 'America/Los_Angeles',
         },
     }
-    
+
     event = service.events().insert(calendarId='primary', body=event).execute()
     return {"message": f"Event created: {event.get('htmlLink')}"}
+
 
 # Route to log out and clear the cookie
 @app.get('/logout')

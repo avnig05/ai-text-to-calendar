@@ -71,7 +71,7 @@ class Event(BaseModel):
         # &location=Porter%20Acad%20144
         # &ctz=America/Los_Angeles
         recurrence_rule = dp.parse_recurring_pattern(self)
-        
+
         start = self.get_start_time()
         end = self.get_end_time()
         if self.is_all_day:
@@ -148,7 +148,7 @@ class Event(BaseModel):
         # if self.is_all_day:
         #     start_str = self.start_time.strftime("%Y%m%d")
         # else:
-        
+
         start_str = self.start_time.strftime("%Y%m%dT%H%M%S")
         return start_str
 
