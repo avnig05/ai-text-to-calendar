@@ -1,11 +1,12 @@
 #!/bin/bash
+
 # Install Python dependencies
-cd src
+cd src/backend
 pip install -r requirements.txt
 
 cd ..
 
 # Install Node.js dependencies
-cd frontend/text-to-calendar
+cd frontend
 npm install
 cd ../..
