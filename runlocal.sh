@@ -1,17 +1,7 @@
 #!/bin/bash
 
-# place .env.local file in the root directory
-# with the following content:
-# NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
-cd src/frontend || { echo "Frontend directory not found"; exit 1; }
 
-if [ -f ".env.local" ]; then
-    echo ".env.local file exists."
-else
-    echo ".env.local file does not exist."
-    echo "writing .env file"
-    echo "NEXT_PUBLIC_API_URL=http://127.0.0.1:8000" > .env.local
-fi
+cd src/frontend || { echo "Frontend directory not found"; exit 1; }
 
 # Navigate to frontend directory and start the frontend server
 echo "Starting Frontend Server..."
