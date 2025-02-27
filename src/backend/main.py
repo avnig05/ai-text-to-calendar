@@ -7,6 +7,7 @@ from event_generation.nlp_parsers.text_parser import TextToEventParser
 from event_generation.nlp_parsers.image_parser import ImageToTextParser
 from fastapi.responses import JSONResponse
 import datetime
+# from icalendar import Calendar
 # from event_generation.event.event import Event
 
 
@@ -31,7 +32,7 @@ async def health_check():
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all domains for now (change in production)
+    allow_origins=["https://calendarize.ratcliff.cc", "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],  # Allow all methods (GET, POST, etc.)
     allow_headers=["*"],  # Allow all headers

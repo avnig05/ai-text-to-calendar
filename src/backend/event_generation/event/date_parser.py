@@ -1,22 +1,16 @@
 from datetime import datetime
 from dateutil.parser import parse
-from typing import Tuple, Optional
 from icalendar import vRecur  # Calendar, Event as IcalEvent
 
 # from event_generation.event.event import Event
 
 
-def parse_datetime(text: str) -> Optional[datetime]:
+def parse_datetime(text: str) -> datetime:
     try:
         return parse(text)
     except ValueError as ve:
         print(f"Error parsing datetime: {ve}")
         return None
-
-
-def extract_date_range(text: str) -> Tuple[datetime, datetime]:
-    # TODO: Implement smart date range extraction
-    pass
 
 
 def parse_recurring_pattern(event) -> str:
@@ -39,7 +33,7 @@ def parse_recurring_pattern(event) -> str:
     return recurrence_rule
 
 
-def get_ical_rrule(event) -> Optional[vRecur]:
+def get_ical_rrule(event) -> vRecur:
     """Constructs the RRULE for iCalendar format."""
     if event.is_recurring and event.recurrence_pattern:
         rrule = {"FREQ": event.recurrence_pattern.upper()}  # "WEEKLY"
