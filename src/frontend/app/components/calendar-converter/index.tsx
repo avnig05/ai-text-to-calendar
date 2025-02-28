@@ -106,6 +106,10 @@ export function CalendarConverter() {
   const handleFileUpload = useCallback(
     async (e: ChangeEvent<HTMLInputElement>) => {
       const uploadedFile = e.target.files?.[0];
+      if (!uploadedFile) {
+        await handleFile(null);
+        return;
+      }
       await handleFile(uploadedFile);
     },
     [handleFile]
