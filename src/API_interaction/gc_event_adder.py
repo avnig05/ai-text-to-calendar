@@ -21,23 +21,55 @@ print(f"Current working directory: {os.getcwd()}")
 
 # Helper function to authenticate the user
 def authenticate_google(request: Request, response: Response):
+    print('function authenticate_google called')
     creds = None
     
     # Check if the token exists in the cookie
     token_json = request.cookies.get('google_auth_token')
     if token_json:
-        creds = Credentials.from_authorized_user_info(json.loads(token_json), SCOPES)
+        print('Found token in cookie')
+        try:
+            creds = Credentials.from_authorized_user_info(json.loads(token_json), SCOPES)
+            print('Loaded credentials from cookie')
+        except ValueError as e:
+            print(f"Error loading credentials from cookie: {e}")
+            creds = None
     
     # If no valid credentials, prompt the user to log in
     if not creds or not creds.valid:
+        print('No valid credentials found, starting OAuth flow')
         if creds and creds.expired and creds.refresh_token:
+            print('Credentials expired but refresh token available, refreshing...')
             creds.refresh(GoogleRequest())
+            print('Credentials refreshed successfully')
         else:
+            print('No valid credentials or refresh token, starting new OAuth flow')
             flow = InstalledAppFlow.from_client_secrets_file(
                 CLIENT_SECRET_PATH, SCOPES)  # Use the absolute path
             flow.redirect_uri = 'http://localhost:8004/callback'  # Update the port to 8004
             print(f"Using redirect_uri: {flow.redirect_uri}")
+            
+            # Generate the authorization URL with access_type and prompt
+            authorization_url, state = flow.authorization_url(
+                access_type='offline',  # Request offline access
+                include_granted_scopes='true',  # Incremental authorization
+                login_hint='hint@example.com',  # Optional login hint
+                # prompt='consent'       # Force consent screen
+            )
+            print(f"Authorization URL: {authorization_url}")
+            
+            # Run the local server to handle the OAuth callback
             creds = flow.run_local_server(port=8004)
+            print('OAuth flow completed, credentials received')
+        
+        # Check if refresh_token is present
+        if not creds.refresh_token:
+            print("Warning: No refresh token found in credentials.")
+        else:
+            print("Refresh token found in credentials.")
+        
+        # Debug: Print the credentials
+        print(f"Credentials: {creds.to_json()}")
         
         # Save the credentials in a secure cookie
         response.set_cookie(
@@ -48,8 +80,10 @@ def authenticate_google(request: Request, response: Response):
             samesite='strict',  # Prevent CSRF attacks
             max_age=3600        # 1 hour expiration
         )
+        print('Credentials saved in cookie')
         return creds
     
+    print('Valid credentials found, returning existing credentials')
     return creds
 
 # Route to start the OAuth flow
