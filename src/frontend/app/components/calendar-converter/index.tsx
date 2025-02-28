@@ -130,14 +130,14 @@ export function CalendarConverter() {
     [handleFile]
   );
 
-  const handlePaste = useCallback((event: ClipboardEvent) => {
+  const handlePaste = useCallback((event: React.ClipboardEvent<HTMLDivElement>) => {
     console.log("Pasting...");
     const clipboardItems = event.clipboardData?.items;
-    console.log("Clipboard items:", clipboardItems);
     if (!clipboardItems) return;
+
+    const items = Array.from(clipboardItems);
   
-    for (const item of clipboardItems) {
-      console.log("Checking item:", item.type);
+    for (const item of items) {
       if (item.type.startsWith("image/")) {
         const file = item.getAsFile();
         if (file) {
@@ -303,7 +303,7 @@ interface FileUploadZoneProps {
   onClick: () => void;
   onDragOver: (e: DragEvent) => void;
   onDrop: (e: DragEvent) => void;
-  onPaste: (e: ClipboardEvent) => void; 
+  onPaste: (e: React.ClipboardEvent<HTMLDivElement>) => void; 
   fileURL: string | null;
 }
 
