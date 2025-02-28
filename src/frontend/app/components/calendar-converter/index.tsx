@@ -153,7 +153,7 @@ export function CalendarConverter() {
   }, [handleFile]);
 
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter") {
       if (e.shiftKey) {
         // Shift + Enter: Insert a new line
