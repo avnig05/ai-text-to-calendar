@@ -93,17 +93,22 @@ export function CalendarConverter() {
     [readTextFromFile]
   );
 
+  // Helper function to handle all types of files
+  const handleFile = useCallback(async (file: File | null) => {
+    if (file) {
+      await handleFileSelection(file);
+    }
+  }, [handleFileSelection]);
+
   /**
    * File input change handler for manual selection.
    */
   const handleFileUpload = useCallback(
     async (e: ChangeEvent<HTMLInputElement>) => {
       const uploadedFile = e.target.files?.[0];
-      if (uploadedFile) {
-        await handleFileSelection(uploadedFile);
-      }
+      await handleFile(uploadedFile);
     },
-    [handleFileSelection]
+    [handleFile]
   );
 
   /**
@@ -120,12 +125,43 @@ export function CalendarConverter() {
     async (e: DragEvent) => {
       e.preventDefault();
       const droppedFile = e.dataTransfer.files?.[0];
-      if (droppedFile) {
-        await handleFileSelection(droppedFile);
-      }
+      await handleFile(droppedFile);
     },
-    [handleFileSelection]
+    [handleFile]
   );
+
+  const handlePaste = useCallback((event: ClipboardEvent) => {
+    console.log("Pasting...");
+    const clipboardItems = event.clipboardData?.items;
+    console.log("Clipboard items:", clipboardItems);
+    if (!clipboardItems) return;
+  
+    for (const item of clipboardItems) {
+      console.log("Checking item:", item.type);
+      if (item.type.startsWith("image/")) {
+        const file = item.getAsFile();
+        if (file) {
+          handleFile(file);
+        }
+        break; // Stop after handling the first image
+      }
+    }
+  }, [handleFile]);
+
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter") {
+      if (e.shiftKey) {
+        // Shift + Enter: Insert a new line
+        e.preventDefault(); // Prevent default Enter behavior
+        setText((prev) => prev + "\n"); // Append new line to text
+      } else {
+        // Enter: Submit the form
+        e.preventDefault(); // Prevent line break
+        handleConvert(); // Call your submit function
+      }
+    }
+  };
 
   /**
    * Textarea change handler for manual text input.
@@ -157,6 +193,7 @@ export function CalendarConverter() {
             onClick={() => fileInputRef.current?.click()}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
+            onPaste={handlePaste}
             fileURL={fileURL}
           />
           <div className="relative">
@@ -164,7 +201,11 @@ export function CalendarConverter() {
               placeholder="Enter event details (date, time, topic, description) for better results."
               value={text}
               onChange={handleTextareaChange}
-              className="min-h-[100px] text-telegraf border-2 border-[#A5C3C2] focus:border-[#218F98] bg-white/95 placeholder:text-[#6B909F] text-[#071E37] w-full rounded-lg max-h-40 overflow-y-auto"
+              onKeyDown={handleKeyDown}
+              className="min-h-[100px] text-telegraf border-2 border-[#A5C3C2] focus:border-[#218F98] 
+                        bg-white/95 placeholder:text-[#6B909F] text-[#071E37] 
+                        w-full rounded-lg max-h-40 overflow-y-auto
+                        p-2"
             />
           </div>
           <Button
@@ -262,16 +303,18 @@ interface FileUploadZoneProps {
   onClick: () => void;
   onDragOver: (e: DragEvent) => void;
   onDrop: (e: DragEvent) => void;
+  onPaste: (e: ClipboardEvent) => void; 
   fileURL: string | null;
 }
 
 // Drop zone with optional file preview
-function FileUploadZone({ onClick, onDragOver, onDrop, fileURL }: FileUploadZoneProps) {
+function FileUploadZone({ onClick, onDragOver, onDrop, onPaste, fileURL }: FileUploadZoneProps) {
   return (
     <div
       onClick={onClick}
       onDragOver={onDragOver}
       onDrop={onDrop}
+      onPaste={onPaste}
       className="border-2 border-dashed border-[#218F98] rounded-lg p-12 text-center cursor-pointer hover:bg-[#218F98]/5 transition-colors"
     >
       <div className="flex flex-col items-center gap-4">
@@ -307,22 +350,43 @@ function FileUploadZone({ onClick, onDragOver, onDrop, fileURL }: FileUploadZone
 // Upload icon
 function UploadIcon() {
   return (
-    <svg
-      className="h-8 w-8 text-[#218F98]"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path
+    <div className="flex items-center space-x-4">
+      {/* First SVG */}
+      <svg
+        className="h-8 w-8 text-[#218F98]"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M9 12h6m-6 4h6m2 5H7a2 2
+             0 01-2-2V5a2 2 0 012-2h5.586
+             a1 1 0 01.707.293l5.414 5.414
+             a1 1 0 01.293.707V19a2 2 0
+             01-2 2z"
+        />
+      </svg>
+
+      {/* Second SVG */}
+      <svg
+        className="h-8 w-8 text-[#218F98]"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
         strokeLinecap="round"
         strokeLinejoin="round"
-        strokeWidth={2}
-        d="M9 12h6m-6 4h6m2 5H7a2 2
-           0 01-2-2V5a2 2 0 012-2h5.586
-           a1 1 0 01.707.293l5.414 5.414
-           a1 1 0 01.293.707V19a2 2 0
-           01-2 2z"
-      />
-    </svg>
+        strokeWidth="2"
+      >
+        <g>
+          <rect width="18" height="18" x="3" y="3" rx="2" />
+          <circle cx="15" cy="9" r="2" />
+          <path d="m3 18l6-6l9 9" />
+        </g>
+      </svg>
+    </div>
   );
 }
