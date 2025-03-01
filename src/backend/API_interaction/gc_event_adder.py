@@ -9,13 +9,16 @@ from pydantic import BaseModel
 import json
 import os
 
+
 class EventRequest(BaseModel):
     title: str
     description: str
     start_time: str
     end_time: str
 
+
 app = FastAPI()
+
 
 # Add CORS middleware
 app.add_middleware(
@@ -33,12 +36,13 @@ SCOPES = ['https://www.googleapis.com/auth/calendar.events']
 CLIENT_SECRET_PATH = os.path.join(os.path.dirname(__file__), 'client_secret.json')
 print(f"Looking for client_secret.json at: {CLIENT_SECRET_PATH}")
 
+
 # Helper function to authenticate the user
 def authenticate_google(request: Request, response: Response):
     try:
         creds = None
         token_json = request.cookies.get('google_auth_token')
-        
+
         if token_json:
             print("Found existing token in cookies")
             creds = Credentials.from_authorized_user_info(json.loads(token_json), SCOPES)
@@ -54,7 +58,7 @@ def authenticate_google(request: Request, response: Response):
                         status_code=500,
                         detail=f"client_secret.json not found at {CLIENT_SECRET_PATH}"
                     )
-                
+
                 print("Starting OAuth flow")
                 flow = InstalledAppFlow.from_client_secrets_file(
                     CLIENT_SECRET_PATH, SCOPES)
@@ -76,22 +80,23 @@ def authenticate_google(request: Request, response: Response):
         print(f"Authentication error: {str(e)}")
         raise HTTPException(status_code=401, detail=str(e))
 
+
 @app.post('/add-event')
 async def add_event(request: Request, response: Response, event: EventRequest):
     try:
         print(f"Received event: {event}")
         creds = authenticate_google(request, response)
-        
+
         # Parse the datetime strings
         start_time = datetime.fromisoformat(event.start_time)
         end_time = datetime.fromisoformat(event.end_time)
-        
+
         # If start and end time are the same, add 1 hour duration
         if start_time == end_time:
             end_time = start_time + timedelta(hours=1)
 
         service = build('calendar', 'v3', credentials=creds)
-        
+
         calendar_event = {
             'summary': event.title,
             'description': event.description,
@@ -108,7 +113,7 @@ async def add_event(request: Request, response: Response, event: EventRequest):
         print(f"Creating event: {json.dumps(calendar_event, default=str)}")
         created_event = service.events().insert(calendarId='primary', body=calendar_event).execute()
         print(f"Event created successfully with ID: {created_event.get('id')}")
-        
+
         return {
             "message": f"Event created: {created_event.get('htmlLink')}",
             "eventId": created_event.get('id')
@@ -119,18 +124,20 @@ async def add_event(request: Request, response: Response, event: EventRequest):
             raise HTTPException(status_code=401, detail="Authentication required")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.delete('/delete-event/{event_id}')
 async def delete_event(event_id: str, request: Request, response: Response):
     try:
         creds = authenticate_google(request, response)
         service = build('calendar', 'v3', credentials=creds)
-        
+
         service.events().delete(calendarId='primary', eventId=event_id).execute()
         return {"message": "Event deleted successfully"}
     except Exception as e:
         if 'invalid_grant' in str(e) or 'unauthorized' in str(e).lower():
             raise HTTPException(status_code=401, detail="Authentication required")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get('/login')
 async def login(request: Request, response: Response):
@@ -140,6 +147,7 @@ async def login(request: Request, response: Response):
         return {"message": "Authentication successful! You can close this window and return to the app."}
     except Exception as e:
         raise HTTPException(status_code=401, detail=str(e))
+
 
 @app.get('/callback')
 async def callback(request: Request, response: Response):
@@ -154,8 +162,8 @@ async def callback(request: Request, response: Response):
                 body { font-family: Arial, sans-serif; text-align: center; padding-top: 50px; }
                 .success { color: green; font-size: 24px; margin-bottom: 20px; }
                 .message { margin-bottom: 30px; }
-                .button { background-color: #4CAF50; border: none; color: white; padding: 15px 32px; 
-                         text-align: center; text-decoration: none; display: inline-block; 
+                .button { background-color: #4CAF50; border: none; color: white; padding: 15px 32px;
+                         text-align: center; text-decoration: none; display: inline-block;
                          font-size: 16px; margin: 4px 2px; cursor: pointer; border-radius: 4px; }
             </style>
             <script>
@@ -178,6 +186,7 @@ async def callback(request: Request, response: Response):
         return HTMLResponse(content=html_content)
     except Exception as e:
         raise HTTPException(status_code=401, detail=str(e))
+
 
 @app.get('/logout')
 async def logout(response: Response):
