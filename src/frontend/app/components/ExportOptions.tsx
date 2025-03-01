@@ -1,86 +1,128 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { Button } from "@/app/components/ui/button"
-import { Check } from "lucide-react"
+import { Check, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
-interface ExportOptionsProps {
-  event: {
-    title: string
-    date: string
-    time: string
-    description: string
-  }
+interface CalendarEvent {
+  title: string
+  date: string
+  time: string
+  description: string
 }
 
+interface ExportOptionsProps {
+  event: CalendarEvent
+}
+
+// API configuration - can be moved to a separate config file
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8004"
+
 export default function ExportOptions({ event }: ExportOptionsProps) {
-  // State for tracking Google Calendar integration
-  const [googleEventId, setGoogleEventId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  // State management
+  const [googleEventId, setGoogleEventId] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [exportStatus, setExportStatus] = useState<Record<string, string>>({})
+  const authWindowRef = useRef<Window | null>(null)
   
   // Generate a unique storage key for this specific event
-  const storageKey = `googleEventId_${event.title}_${event.date}_${event.time}`.replace(/\s+/g, '_');
+  const storageKey = `googleEventId_${event.title}_${event.date}_${event.time}`.replace(/\s+/g, '_')
   
-  // Debug log
-  console.log("Current event:", event);
-  console.log("Storage key:", storageKey);
-  console.log("Initial googleEventId state:", googleEventId);
-  
-  // Load saved event ID on component mount
+  // Handle authentication and event loading
   useEffect(() => {
-    const savedEventId = localStorage.getItem(storageKey);
-    console.log("Saved event ID from localStorage:", savedEventId);
-    
+    // Load saved event ID on component mount
+    const savedEventId = localStorage.getItem(storageKey)
     if (savedEventId) {
-      console.log("Setting googleEventId state to:", savedEventId);
-      setGoogleEventId(savedEventId);
+      setGoogleEventId(savedEventId)
     }
     
-    // Check if we're returning from auth
-    const pendingEvent = localStorage.getItem('pendingEventDetails');
-    if (pendingEvent) {
-      try {
-        const parsedEvent = JSON.parse(pendingEvent);
-        console.log("Pending event from localStorage:", parsedEvent);
-        
-        if (parsedEvent.title === event.title && 
-            parsedEvent.date === event.date && 
-            parsedEvent.time === event.time) {
-          console.log("Returning from auth with matching event");
-          localStorage.removeItem('pendingEventDetails');
-          // Attempt to add the event after a short delay
-          setTimeout(() => {
-            console.log("Auto-triggering Google Calendar export");
-            handleGoogleCalendarExport();
-          }, 1000);
+    // Listen for messages from the auth window
+    const handleAuthMessage = (messageEvent: MessageEvent) => {
+      if (messageEvent.data === 'google-auth-complete') {
+        // Retrieve the pending event details
+        const pendingEventJSON = localStorage.getItem('pendingEventDetails')
+        if (pendingEventJSON) {
+          try {
+            const pendingEvent = JSON.parse(pendingEventJSON)
+            localStorage.removeItem('pendingEventDetails')
+            
+            // If this component matches the pending event, try to add it
+            if (pendingEvent.title === event.title && 
+                pendingEvent.date === event.date && 
+                pendingEvent.time === event.time) {
+              setTimeout(() => handleGoogleCalendarExport(), 1000)
+            }
+          } catch (e) {
+            // If parsing fails, just try with the current event
+            setTimeout(() => handleGoogleCalendarExport(), 1000)
+          }
+        } else {
+          // If no pending event, just try to add the current event
+          setTimeout(() => handleGoogleCalendarExport(), 1000)
         }
-      } catch (e) {
-        console.error("Error parsing pending event", e);
-        localStorage.removeItem('pendingEventDetails');
+      } else if (messageEvent.data === 'google-auth-failed') {
+        setIsLoading(false)
+        toast.error("Google authentication failed. Please try again.")
       }
     }
-  }, [event.title, event.date, event.time, storageKey]);
-
-  const handleGoogleCalendarExport = async () => {
-    console.log("handleGoogleCalendarExport called, current googleEventId:", googleEventId);
     
+    window.addEventListener('message', handleAuthMessage)
+    
+    // Clean up event listener on unmount
+    return () => {
+      window.removeEventListener('message', handleAuthMessage)
+      
+      // Close auth window if it's still open
+      if (authWindowRef.current && !authWindowRef.current.closed) {
+        authWindowRef.current.close()
+      }
+    }
+  }, [event, storageKey])
+
+  /**
+   * Handle exporting to Google Calendar
+   */
+  const handleGoogleCalendarExport = async () => {
     // If already added, open the event in Google Calendar
     if (googleEventId) {
-      console.log("Event already added, opening in Google Calendar");
-      window.open(`https://calendar.google.com/calendar/event?eid=${googleEventId}`, '_blank');
-      return;
+      window.open(`https://calendar.google.com/calendar/event?eid=${googleEventId}`, '_blank')
+      return
     }
 
-    setIsLoading(true);
-    console.log("Setting isLoading to true");
+    setIsLoading(true)
+    setExportStatus({...exportStatus, google: 'loading'})
     
     try {
-      console.log("Attempting to add event to Google Calendar:", {
-        title: event.title,
-        description: event.description,
-        start_time: event.date + 'T' + event.time,
-        end_time: event.date + 'T' + event.time
-      });
+      // Check if user is authenticated
+      const authCheckResponse = await fetch(`${API_BASE_URL}/check-auth`, {
+        method: 'GET',
+        credentials: 'include',
+      })
       
-      const response = await fetch('http://localhost:8004/add-event', {
+      // If not authenticated, prompt for login
+      if (authCheckResponse.status === 401) {
+        setIsLoading(false)
+        setExportStatus({...exportStatus, google: 'unauthenticated'})
+        
+        const wantsToSignIn = window.confirm(
+          'You need to sign in to Google Calendar to add this event. Would you like to sign in now?'
+        )
+        
+        if (wantsToSignIn) {
+          // Store event details for after authentication
+          localStorage.setItem('pendingEventDetails', JSON.stringify(event))
+          
+          // Open Google login in a new window and keep a reference to it
+          authWindowRef.current = window.open(
+            `${API_BASE_URL}/login`, 
+            'googleAuthWindow', 
+            'width=600,height=700,menubar=no,toolbar=no'
+          )
+        }
+        return
+      }
+      
+      // User is authenticated, add the event
+      const response = await fetch(`${API_BASE_URL}/add-event`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -92,80 +134,113 @@ export default function ExportOptions({ event }: ExportOptionsProps) {
           start_time: event.date + 'T' + event.time,
           end_time: event.date + 'T' + event.time
         })
-      });
+      })
 
-      console.log("Response status:", response.status);
-      const data = await response.json();
-      console.log("Response data:", data);
+      const data = await response.json()
 
       if (response.status === 401) {
-        console.log("Not authenticated, showing sign-in prompt");
-        // Not authenticated - ask user if they want to sign in
+        // Authentication failed, prompt for login
+        setExportStatus({...exportStatus, google: 'unauthenticated'})
+        
         const wantsToSignIn = window.confirm(
-          'Would you like to sign in to Google Calendar to add this event directly?'
-        );
-
+          'Your Google session has expired. Would you like to sign in again?'
+        )
+        
         if (wantsToSignIn) {
-          console.log("User wants to sign in, storing event details and redirecting");
-          // Store current event details for after login
-          localStorage.setItem('pendingEventDetails', JSON.stringify(event));
-          window.location.href = 'http://localhost:8004/login';
-        } else {
-          console.log("User declined to sign in");
+          localStorage.setItem('pendingEventDetails', JSON.stringify(event))
+          authWindowRef.current = window.open(
+            `${API_BASE_URL}/login`, 
+            'googleAuthWindow', 
+            'width=600,height=700,menubar=no,toolbar=no'
+          )
         }
       } else if (response.ok) {
-        // Successfully added to Google Calendar
-        console.log("Event added successfully, eventId:", data.eventId);
-        
+        // Event added successfully
         if (data.eventId) {
-          console.log("Setting googleEventId state to:", data.eventId);
-          setGoogleEventId(data.eventId);
-          localStorage.setItem(storageKey, data.eventId);
-          console.log("Saved eventId to localStorage with key:", storageKey);
+          setGoogleEventId(data.eventId)
+          localStorage.setItem(storageKey, data.eventId)
+          setExportStatus({...exportStatus, google: 'success'})
           
-          // Force re-render
-          setTimeout(() => {
-            console.log("Forcing re-render");
-            setGoogleEventId(prevId => {
-              console.log("Re-render with ID:", prevId);
-              return prevId;
-            });
-          }, 100);
+          // Open the event in a new tab
+          if (data.message && data.message.includes('http')) {
+            const eventUrl = data.message.split(': ')[1]
+            window.open(eventUrl, '_blank')
+          }
+          
+          toast.success('Event added to Google Calendar!')
         } else {
-          console.error("No eventId returned from API");
+          setExportStatus({...exportStatus, google: 'error'})
+          toast.error('Event was added but no event ID was returned')
         }
-        
-        // Open the event link in a new tab if available
-        if (data.message && data.message.includes('http')) {
-          const eventUrl = data.message.split(': ')[1];
-          console.log("Opening event URL:", eventUrl);
-          window.open(eventUrl, '_blank');
-        }
-        
-        alert('Event added to Google Calendar!');
       } else {
-        throw new Error(data.detail || 'Failed to add event to Google Calendar');
+        throw new Error(data.detail || 'Failed to add event to Google Calendar')
       }
     } catch (error) {
-      console.error('Error adding to Google Calendar:', error);
-      alert('Failed to add event to Google Calendar: ' + error);
+      setExportStatus({...exportStatus, google: 'error'})
+      toast.error(`Failed to add event to Google Calendar: ${error instanceof Error ? error.message : String(error)}`)
     } finally {
-      console.log("Setting isLoading to false");
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
+  /**
+   * Handle exporting to Outlook Calendar
+   */
   const handleOutlookExport = () => {
-    console.log("Exporting to Outlook:", event);
-  };
+    // Placeholder for Outlook export
+    const subject = encodeURIComponent(event.title)
+    const body = encodeURIComponent(event.description)
+    const startTime = encodeURIComponent(event.date + 'T' + event.time)
+    const endTime = encodeURIComponent(event.date + 'T' + event.time)
+    
+    const outlookUrl = `https://outlook.office.com/calendar/0/deeplink/compose?subject=${subject}&body=${body}&startdt=${startTime}&enddt=${endTime}`
+    window.open(outlookUrl, '_blank')
+    
+    setExportStatus({...exportStatus, outlook: 'success'})
+    toast.success('Event details prepared for Outlook Calendar')
+  }
 
+  /**
+   * Handle exporting to Apple Calendar
+   */
   const handleAppleCalendarExport = () => {
-    console.log("Exporting to Apple Calendar:", event);
-  };
+    // Create an .ics file for Apple Calendar
+    const startDate = new Date(`${event.date}T${event.time}`)
+    const endDate = new Date(startDate.getTime() + 60 * 60 * 1000) // 1 hour later
+    
+    const icsContent = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'CALSCALE:GREGORIAN',
+      'BEGIN:VEVENT',
+      `SUMMARY:${event.title}`,
+      `DTSTART:${formatDateForICS(startDate)}`,
+      `DTEND:${formatDateForICS(endDate)}`,
+      `DESCRIPTION:${event.description.replace(/\n/g, '\\n')}`,
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].join('\r\n')
+    
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `${event.title.replace(/\s+/g, '_')}.ics`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    
+    setExportStatus({...exportStatus, apple: 'success'})
+    toast.success('Calendar file downloaded for Apple Calendar')
+  }
 
-  // Debug render
-  console.log("Rendering with googleEventId:", googleEventId);
-  console.log("Button class:", `w-full ${googleEventId ? 'bg-green-600 hover:bg-green-700' : 'bg-teal-600 hover:bg-teal-700'} text-white flex items-center justify-center gap-1`);
+  /**
+   * Format a date for ICS file format
+   */
+  const formatDateForICS = (date: Date): string => {
+    return date.toISOString().replace(/-|:|\.\d{3}/g, '')
+  }
 
   return (
     <>
@@ -185,7 +260,10 @@ export default function ExportOptions({ event }: ExportOptionsProps) {
           className="w-full text-white"
         >
           {isLoading ? (
-            'Processing...'
+            <>
+              <Loader2 className="h-4 w-4 animate-spin mr-1" />
+              Processing...
+            </>
           ) : googleEventId ? (
             <>
               <Check className="w-4 h-4" />
@@ -207,12 +285,6 @@ export default function ExportOptions({ event }: ExportOptionsProps) {
         >
           Apple Calendar
         </Button>
-      </div>
-      
-      {/* Debug info - remove in production */}
-      <div className="mt-2 text-xs text-gray-400">
-        Status: {googleEventId ? 'Added to Google Calendar' : 'Not added'} 
-        {googleEventId && <span> (ID: {googleEventId.substring(0, 8)}...)</span>}
       </div>
     </>
   )
