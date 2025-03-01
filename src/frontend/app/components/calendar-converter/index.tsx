@@ -106,6 +106,10 @@ export function CalendarConverter() {
   const handleFileUpload = useCallback(
     async (e: ChangeEvent<HTMLInputElement>) => {
       const uploadedFile = e.target.files?.[0];
+      if (!uploadedFile) {
+        await handleFile(null);
+        return;
+      }
       await handleFile(uploadedFile);
     },
     [handleFile]
@@ -149,7 +153,7 @@ export function CalendarConverter() {
   }, [handleFile]);
 
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter") {
       if (e.shiftKey) {
         // Shift + Enter: Insert a new line
