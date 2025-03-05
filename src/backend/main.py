@@ -13,7 +13,8 @@ import datetime
 
 class CalendarRequest(BaseModel):
     event_body: str
-    platform: str
+    local_time: str
+    local_tz: str
 
 
 app = FastAPI()
@@ -32,7 +33,7 @@ async def health_check():
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://calendarize.tech", "http://localhost:3000"],
+    allow_origins=["https://calendarize.ratcliff.cc", "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],  # Allow all methods (GET, POST, etc.)
     allow_headers=["*"],  # Allow all headers
@@ -48,7 +49,7 @@ async def root():
 async def add_to_calendar(item: CalendarRequest):
     # return item
     parser = TextToEventParser()
-    event_list = parser.parse_text(item.event_body)
+    event_list = parser.parse_text(item.event_body, item.local_time, item.local_tz)
 
     for event in event_list:
         print(event)

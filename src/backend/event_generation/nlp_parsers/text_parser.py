@@ -3,13 +3,14 @@ from datetime import datetime
 import json
 import logging
 import traceback
+import base64
 
 # Third-party imports
 # from dotenv import load_dotenv
 # from pathlib import Path
 from openai import OpenAI
 from pydantic import ValidationError
-import tzlocal as tz
+# import tzlocal as tz
 
 # Local application imports
 from event_generation.event.event import Event
@@ -19,18 +20,26 @@ from event_generation.config.readenv import get_openai_key
 logging.basicConfig(level=logging.ERROR)  # Configure logging
 
 
+# private Helper function to encode the image
+# https://platform.openai.com/docs/guides/vision#uploading-base64-encoded-images
+def encode_image(image_path):
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode("utf-8")
+
+
 class TextToEventParser:
     def __init__(self):
         # Initialize OpenAI client with API key
         self.client = OpenAI(api_key=get_openai_key())
 
-    def parse_text(self, text: str) -> Event:
+    def parse_text(self, text: str, local_time: str, local_tz: str, image_path=None) -> Event:
         # send request to OpenAI API to extract event details into a JSON object
         try:
             # get current time up to the minute for relative date calculations
             # Format as                     "HH:MM:SS DAY, MONTH DAY, YEAR"
-            time_info = datetime.now().strftime("%H:%M:%S %A, %B %d, %Y")
-            current_time_zone = tz.get_localzone()
+            time_info = datetime.strptime(local_time, "%Y-%m-%dT%H:%M:%SZ")
+            time_info = time_info.strftime("%H:%M:%S %A, %B %d, %Y")
+            current_time_zone = local_tz
 
             prompt = f"""You are an AI that extracts structured event details from text.
                         Use the Information about the current time: **{time_info}** and the current timezone is: **{current_time_zone}**.
@@ -46,6 +55,8 @@ class TextToEventParser:
                         - If only a time is given (e.g., "at 2pm"), assume it refers to today unless the event is clearly in the future.
                         - 24:00 is not a valid time always default to use 23:59 instead.
                         - **If there appear to be multiple events in the text, extract all of them into separate events. But maintain details that apply to multiple events.**
+                        - **If an image is passed in the request, inperpet the image and extract all the details that would be important to the event as well as an exact description**
+                        - It's possible that an image wont have very clear text or might have a wierd format (a screenshot of google calendar for example) do your best to extract the information.
 
                         Extract and return in JSON format:
                         - title: str **a title is required never leave it null**
@@ -125,25 +136,53 @@ class TextToEventParser:
                         }}
 
                         """
-
             print("\nsending request to OpenAI API: ", text)
-            print()
             print("Time Info: ", time_info)
             print(f"Current Timezone: {current_time_zone}")
+            if image_path:
+                base64_image = encode_image(image_path)
+                print(f"Image Path: {image_path}")
             print()
-
             print("\nwaiting on response from OpenAI API...")
-            response = self.client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": prompt,
-                    },
-                    {"role": "user", "content": text},
-                ],
-                response_format={"type": "json_object"},
-            )
+
+            if image_path:
+                response = self.client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": prompt,
+                        },
+                        {
+                            "role": "user",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": text,
+                                },
+                                {
+                                    "type": "image_url",
+                                    "image_url": {
+                                        "url": f"data:image/jpeg;base64,{base64_image}"
+                                    },
+                                },
+                            ]
+                        },
+                    ],
+                    response_format={"type": "json_object"},
+                )
+            else:
+                response = self.client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": prompt,
+                        },
+                        {"role": "user", "content": text},
+                    ],
+                    response_format={"type": "json_object"},
+                )
 
         # catch any errors gracefully
         except ConnectionError as ce:
