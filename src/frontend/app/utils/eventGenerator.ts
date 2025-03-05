@@ -8,7 +8,7 @@ const API_UPLOAD = API_BASE_URL + "/upload";
 export const generateEventFromText = async (text: string): Promise<CalendarEvent[]> => {
 	try {
 		const local_tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-		const local_time = new Date().toLocaleTimeString('sv-SE', { timeZone: local_tz }).replace(' ', 'T') + 'Z';
+		const local_time = new Date().toLocaleString('sv-SE', { timeZone: local_tz }).replace(' ', 'T') + 'Z';
 		console.log("prompt", text);
 		console.log("local time", local_time, local_tz);
 		console.log("Sending request to backend:", API_EVENT);
