@@ -33,7 +33,7 @@ async def health_check():
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://calendarize.tech", "http://localhost:3000", "https://calendarize.ratcliff.cc"],
+    allow_origins=["https://calendarize.ratcliff.cc", "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],  # Allow all methods (GET, POST, etc.)
     allow_headers=["*"],  # Allow all headers
