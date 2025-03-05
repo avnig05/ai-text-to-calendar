@@ -7,6 +7,7 @@ import React, {
   DragEvent,
   ChangeEvent,
   KeyboardEvent,
+  ClipboardEvent,
 } from "react";
 import Image from "next/image";
 import { Button } from "@/app/components/ui/button";
@@ -135,7 +136,7 @@ export function CalendarConverter() {
     [handleFile]
   );
 
-  const handlePaste = useCallback((event: React.ClipboardEvent<HTMLDivElement>) => {
+  const handlePaste = useCallback((event: ClipboardEvent<HTMLDivElement>) => {
     console.log("Pasting...");
     const clipboardItems = event.clipboardData?.items;
     if (!clipboardItems) return;
@@ -154,7 +155,7 @@ export function CalendarConverter() {
   }, [handleFile]);
 
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter") {
       if (e.shiftKey) {
         // Shift + Enter: Insert a new line
