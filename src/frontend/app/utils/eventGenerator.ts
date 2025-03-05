@@ -7,7 +7,10 @@ const API_UPLOAD = API_BASE_URL + "/upload";
 // Function to generate an event from text input
 export const generateEventFromText = async (text: string): Promise<CalendarEvent[]> => {
 	try {
+		const local_tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+		const local_time = new Date().toLocaleTimeString('en-US', { timeZone: local_tz });
 		console.log("prompt", text);
+		console.log("local time", local_time, local_tz);
 		console.log("Sending request to backend:", API_EVENT);
 		const response = await fetch(API_EVENT, {
 			method: "POST",
@@ -17,8 +20,8 @@ export const generateEventFromText = async (text: string): Promise<CalendarEvent
 			},
 			body: JSON.stringify({
 				event_body: text,
-				local_time: new Date().toISOString(),
-				local_tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+				local_tz: local_tz,
+				local_time: local_time
 			}),
 		});
 		
