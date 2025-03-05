@@ -7,7 +7,7 @@ export const exportToGoogleCalendar = (event: CalendarEvent) => {
 
 export const exportToOutlook = (event: CalendarEvent) => {
 	const url = event.outlook_link;
-	window.open(url);
+	window.open(url, "_blank");
 };
 
 // export const exportToAppleCalendar = (event: CalendarEvent) => {
