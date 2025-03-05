@@ -29,7 +29,7 @@ class TextToEventParser:
         try:
             # get current time up to the minute for relative date calculations
             # Format as                     "HH:MM:SS DAY, MONTH DAY, YEAR"
-            time_info = datetime.strptime(local_time, "%Y-%m-%dT%H:%M:%S.%fZ")
+            time_info = datetime.strptime(local_time, "%Y-%m-%dT%H:%M:%SZ")
             time_info = time_info.strftime("%H:%M:%S %A, %B %d, %Y")
             current_time_zone = local_tz
 
