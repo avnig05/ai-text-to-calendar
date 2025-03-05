@@ -13,7 +13,8 @@ import datetime
 
 class CalendarRequest(BaseModel):
     event_body: str
-    platform: str
+    local_time: str
+    local_tz: str
 
 
 app = FastAPI()
@@ -48,7 +49,7 @@ async def root():
 async def add_to_calendar(item: CalendarRequest):
     # return item
     parser = TextToEventParser()
-    event_list = parser.parse_text(item.event_body)
+    event_list = parser.parse_text(item.event_body, item.local_time, item.local_tz)
 
     for event in event_list:
         print(event)

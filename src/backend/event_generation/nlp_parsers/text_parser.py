@@ -9,7 +9,7 @@ import traceback
 # from pathlib import Path
 from openai import OpenAI
 from pydantic import ValidationError
-import tzlocal as tz
+# import tzlocal as tz
 
 # Local application imports
 from event_generation.event.event import Event
@@ -24,13 +24,14 @@ class TextToEventParser:
         # Initialize OpenAI client with API key
         self.client = OpenAI(api_key=get_openai_key())
 
-    def parse_text(self, text: str) -> Event:
+    def parse_text(self, text: str, local_time: str, local_tz: str) -> Event:
         # send request to OpenAI API to extract event details into a JSON object
         try:
             # get current time up to the minute for relative date calculations
             # Format as                     "HH:MM:SS DAY, MONTH DAY, YEAR"
-            time_info = datetime.now().strftime("%H:%M:%S %A, %B %d, %Y")
-            current_time_zone = tz.get_localzone()
+            time_info = datetime.strptime(local_time, "%Y-%m-%dT%H:%M:%S.%fZ")
+            time_info = time_info.strftime("%H:%M:%S %A, %B %d, %Y")
+            current_time_zone = local_tz
 
             prompt = f"""You are an AI that extracts structured event details from text.
                         Use the Information about the current time: **{time_info}** and the current timezone is: **{current_time_zone}**.

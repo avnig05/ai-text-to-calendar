@@ -17,7 +17,8 @@ export const generateEventFromText = async (text: string): Promise<CalendarEvent
 			},
 			body: JSON.stringify({
 				event_body: text,
-				platform: "google",
+				local_time: new Date().toISOString(),
+				local_tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
 			}),
 		});
 		
