@@ -6,6 +6,7 @@ import React, {
   useCallback,
   DragEvent,
   ChangeEvent,
+  KeyboardEvent,
 } from "react";
 import Image from "next/image";
 import { Button } from "@/app/components/ui/button";
@@ -105,7 +106,7 @@ export function CalendarConverter() {
    */
   const handleFileUpload = useCallback(
     async (e: ChangeEvent<HTMLInputElement>) => {
-      const uploadedFile = e.target.files?.[0];
+      const uploadedFile = e.target.files?.[0] || null;
       await handleFile(uploadedFile);
     },
     [handleFile]
