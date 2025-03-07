@@ -1,4 +1,4 @@
-'use client'
+"use client"
 
 import { PostHogProvider } from 'posthog-js/react'
 import posthog from 'posthog-js'
