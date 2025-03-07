@@ -1,11 +1,19 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional
 from pydantic import BaseModel, Field
 import event_generation.event.date_parser as dp
-from icalendar import Event as IcalEvent, Calendar  # vRecur
+from icalendar import Event as IcalEvent, Calendar, Timezone, TimezoneStandard, TimezoneDaylight
 from urllib.parse import quote
 from zoneinfo import ZoneInfo
+
+
+def offset_to_timedelta(offset_str: str) -> timedelta:
+    # Convert a string in the format '+HHMM' or '-HHMM' to a timedelta
+    sign = 1 if offset_str[0] == '+' else -1
+    hours = int(offset_str[1:3])
+    minutes = int(offset_str[3:5])
+    return timedelta(hours=sign * hours, minutes=sign * minutes)
 
 
 class Event(BaseModel):
@@ -36,6 +44,48 @@ class Event(BaseModel):
 
     def set_ical_string(self):
         cal = Calendar()
+        cal.add("prodid", "-//Calendarize//calendarize.tech//EN")
+        cal.add("version", "2.0")
+
+        # Create the VTIMEZONE component for America/Los_Angeles
+        tz = Timezone()
+        tz.add("tzid", self.time_zone)
+
+        # Get dynamic time zone info using ZoneInfo
+        tzinfo = ZoneInfo(self.time_zone)
+        # Representative dates: one for winter and one for summer
+        winter_dt = datetime(2021, 1, 1, 0, 0, 0, tzinfo=tzinfo)
+        summer_dt = datetime(2021, 7, 1, 0, 0, 0, tzinfo=tzinfo)
+
+        winter_offset = winter_dt.strftime('%z')  # e.g. "-0800"
+        summer_offset = summer_dt.strftime('%z')  # e.g. "-0700" if DST is observed
+
+        if winter_offset == summer_offset:
+            # Time zone does not observe DST; only a STANDARD block is needed.
+            tz_standard = TimezoneStandard()
+            tz_standard.add("dtstart", datetime(1970, 1, 1, 0, 0, 0))
+            tz_standard.add("tzoffsetfrom", offset_to_timedelta(winter_offset))
+            tz_standard.add("tzoffsetto", offset_to_timedelta(winter_offset))
+            tz_standard.add("tzname", winter_dt.tzname() or self.time_zone)
+            tz.add_component(tz_standard)
+        else:
+            # Time zone observes DST; add both STANDARD and DAYLIGHT blocks.
+            tz_standard = TimezoneStandard()
+            tz_standard.add("dtstart", datetime(1970, 1, 1, 0, 0, 0))
+            tz_standard.add("tzoffsetfrom", offset_to_timedelta(winter_offset))
+            tz_standard.add("tzoffsetto", offset_to_timedelta(winter_offset))
+            tz_standard.add("tzname", winter_dt.tzname() or self.time_zone)
+            tz.add_component(tz_standard)
+
+            tz_daylight = TimezoneDaylight()
+            tz_daylight.add("dtstart", datetime(1970, 7, 1, 0, 0, 0))
+            tz_daylight.add("tzoffsetfrom", offset_to_timedelta(winter_offset))
+            tz_daylight.add("tzoffsetto", offset_to_timedelta(summer_offset))
+            tz_daylight.add("tzname", summer_dt.tzname() or self.time_zone)
+            tz.add_component(tz_daylight)
+
+        cal.add_component(tz)
+
         event = IcalEvent()  # Create an event object
 
         # Title
@@ -53,8 +103,8 @@ class Event(BaseModel):
         event.add("dtstamp", datetime.now())
 
         # Other optional fields:
-        event.add("location", self.location if self.location else "No Location")
-
+        if self.location:
+            event.add("location", self.location)
         if self.description:
             event.add("description", self.description)
         # Ensure a globally unique event ID
@@ -69,11 +119,6 @@ class Event(BaseModel):
         rrule = dp.get_ical_rrule(self)
         if rrule:
             event["RRULE"] = rrule
-
-        # Generate Google Calendar link with all details and add as URL property
-        self.set_gcal_link()
-        if self.gcal_link:
-            event.add("url", self.gcal_link)
 
         # Add the event to the calendar
         cal.add_component(event)

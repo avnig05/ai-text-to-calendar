@@ -59,6 +59,24 @@ const config: Config = {
   		},
   		screens: {
   			'xs': '380px',
+  		},
+  		keyframes: {
+  			'beam-move-right': {
+  				'0%, 100%': { transform: 'translateX(-200%)', opacity: '0' },
+  				'50%': { transform: 'translateX(200%)', opacity: '1' }
+  			},
+  			'beam-move-down': {
+  				'0%, 100%': { transform: 'translateY(-200%)', opacity: '0' },
+  				'50%': { transform: 'translateY(200%)', opacity: '1' }
+  			},
+  			'beam-move-left': {
+  				'0%, 100%': { transform: 'translateX(200%)', opacity: '0' },
+  				'50%': { transform: 'translateX(-200%)', opacity: '1' }
+  			},
+  			'beam-move-up': {
+  				'0%, 100%': { transform: 'translateY(200%)', opacity: '0' },
+  				'50%': { transform: 'translateY(-200%)', opacity: '1' }
+  			}
   		}
   	}
   },

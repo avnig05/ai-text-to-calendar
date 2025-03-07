@@ -36,22 +36,28 @@ export const generateEvent = async (
 		});
 
 		if (!response.ok) {
-		console.log("bad response:", response);
-		return [
-			{
-			title: "Sample Event",
-			description: "This is a sample event created from the input text.",
-			start_time: "",
-			time_zone: "America/Los_Angeles",
-			end_time: "",
-			gcal_link: "",
-			outlook_link: "",
-			},
-		];
+			console.error("Error generating event:", response.statusText);
+			return [
+				{
+					title: "Sample Event",
+					time_zone: "America/Los_Angeles",
+					start_time: "",
+					end_time: "",
+					description: "Something went wrong while generating this event :(",
+					location: "",
+					attendees: [],
+					recurrence_type: "",
+					recurrence_days: [],
+					recurrence_count: 0,
+					recurrence_end: "",
+					gcal_link: "",
+					outlook_link: "",
+					ics_string: "",
+				},
+			];
 		}
 
 		const data = await response.json();
-		console.log("Response data:", data);
 
 		// Ensure response is a list of events
 		if (!Array.isArray(data)) {
@@ -61,14 +67,22 @@ export const generateEvent = async (
 		// Map response events to CalendarEvent format
 		const events: CalendarEvent[] = data.map((event) => ({
 		title: event.title || "Sample Event",
-		start_time: event.start_time,
 		time_zone: event.time_zone || "America/Los_Angeles",
+		start_time: event.start_time,
 		end_time: event.end_time,
 		description: event.description || "No description provided for this event.",
+		location: event.location || "",
+		attendees: event.attendees || [],
+		recurrence_type: event.recurrence_pattern || "",
+		recurrence_days: event.recurrence_days || [],
+		recurrence_count: event.recurrence_count || 0,
+		recurrence_end: event.recurrence_end_date || "",
 		gcal_link: event.gcal_link || "",
 		outlook_link: event.outlook_link || "",
+		ics_string: event.ics || "",
 		}));
 
+		console.log("Generated events:", events);
 		return events;
 	} catch (error) {
 		console.error("Error generating event:", error);
@@ -76,12 +90,19 @@ export const generateEvent = async (
 		return [
 		{
 			title: "Sample Event",
-			description: "This is a sample event created from the input text.",
-			start_time: "",
 			time_zone: "America/Los_Angeles",
+			start_time: "",
 			end_time: "",
+			description: "Something went wrong while generating this event :(",
+			location: "",
+			attendees: [],
+			recurrence_type: "",
+			recurrence_days: [],
+			recurrence_count: 0,
+			recurrence_end: "",
 			gcal_link: "",
 			outlook_link: "",
+			ics_string: "",
 		},
 		];
 	}
