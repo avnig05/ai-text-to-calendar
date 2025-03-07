@@ -46,6 +46,10 @@ export const generateEvent = async (
 					description: "Something went wrong while generating this event :(",
 					location: "",
 					attendees: [],
+					recurrence_type: "",
+					recurrence_days: [],
+					recurrence_count: 0,
+					recurrence_end: "",
 					gcal_link: "",
 					outlook_link: "",
 					ics_string: "",
@@ -69,11 +73,16 @@ export const generateEvent = async (
 		description: event.description || "No description provided for this event.",
 		location: event.location || "",
 		attendees: event.attendees || [],
+		recurrence_type: event.recurrence_pattern || "",
+		recurrence_days: event.recurrence_days || [],
+		recurrence_count: event.recurrence_count || 0,
+		recurrence_end: event.recurrence_end_date || "",
 		gcal_link: event.gcal_link || "",
-		outlook_link: event.outlook_link || ``,
+		outlook_link: event.outlook_link || "",
 		ics_string: event.ics || "",
 		}));
 
+		console.log("Generated events:", events);
 		return events;
 	} catch (error) {
 		console.error("Error generating event:", error);
@@ -84,9 +93,13 @@ export const generateEvent = async (
 			time_zone: "America/Los_Angeles",
 			start_time: "",
 			end_time: "",
-			description: "This is a sample event created from the input text.",
+			description: "Something went wrong while generating this event :(",
 			location: "",
 			attendees: [],
+			recurrence_type: "",
+			recurrence_days: [],
+			recurrence_count: 0,
+			recurrence_end: "",
 			gcal_link: "",
 			outlook_link: "",
 			ics_string: "",

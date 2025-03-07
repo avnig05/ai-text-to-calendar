@@ -70,6 +70,19 @@ const formatDateTime = (date: string): string => {
   }
 };
 
+const formatDate = (date: string): string => {
+  try {
+    const parsed = parseISO(date)
+    if (!isValid(parsed)) {
+      throw new Error("Invalid date format")
+    }
+    return format(parsed, "EEEE, MMMM d, yyyy")
+  } catch (error) {
+    console.error("Date formatting error:", error)
+    return "Invalid date"
+  }
+}
+
 // Reusable Button Component
 const ExportButton: React.FC<ExportButtonProps> = ({ label, onClick, className = "" }) => (
   <Button
@@ -113,6 +126,16 @@ export function GeneratedEventDisplay({ event }: { event: CalendarEvent }): JSX.
     end: formatDateTime(event.end_time)
   }), [event.start_time, event.end_time]);
 
+  const dayMapping: { [key: string]: string } = {
+    mo: "Monday",
+    tu: "Tuesday",
+    we: "Wednesday",
+    th: "Thursday",
+    fr: "Friday",
+    sa: "Saturday",
+    su: "Sunday",
+  };
+
   return (
     <Card className="w-full border-[#218F98] bg-white/95 shadow-sm">
       <CardHeader>
@@ -143,6 +166,38 @@ export function GeneratedEventDisplay({ event }: { event: CalendarEvent }): JSX.
             text={`${eventDateTime.start} - ${eventDateTime.end}`}
             contentClass={`text-telegraf text-[${CONFIG.COLORS.TEXT_SECONDARY}]`}
           />
+          <div className="ml-4 space-y-2">
+            {event.recurrence_type && (
+              <SectionRow 
+                icon={<RecurrenceIcon />}
+                text={`Recurring: ${event.recurrence_type.toLowerCase()}`}
+                contentClass={`text-tele  graf text-[${CONFIG.COLORS.TEXT_SECONDARY}]`}
+              />
+            )}
+            {event.recurrence_type=="WEEKLY" && event.recurrence_days && (
+              <SectionRow 
+                icon={<RecurrenceIcon />}
+                text={`On: ${event.recurrence_days
+                  .map(day => dayMapping[day.toLowerCase()] || day)
+                  .join(", ")}`}
+                contentClass={`text-tele graf text-[${CONFIG.COLORS.TEXT_SECONDARY}]`}
+              />
+            )}
+            {event.recurrence_type && event.recurrence_count != 0 && (
+              <SectionRow 
+                icon={<RecurrenceIcon />}
+                text={`${event.recurrence_count} times`}
+                contentClass={`text-tele  graf text-[${CONFIG.COLORS.TEXT_SECONDARY}]`}
+              />
+            )}
+            {event.recurrence_type && event.recurrence_end && (
+              <SectionRow 
+                icon={<RecurrenceIcon />}
+                text={`Until: ${formatDate(event.recurrence_end)}`}
+                contentClass={`text-tele  graf text-[${CONFIG.COLORS.TEXT_SECONDARY}]`}
+              />
+            )}
+          </div>
           {event.description && (
             <SectionRow
               icon={<LinesIcon />}
@@ -315,4 +370,16 @@ function EmailIcon() {
       />
     </svg>
   )
+}
+function RecurrenceIcon() {
+  return (
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M4 4v5h.582M20 20v-5h-.582M4.93 6.93a10 10 0 0114.14 0M19.07 17.07a10 10 0 01-14.14 0"
+      />
+    </svg>
+  );
 }

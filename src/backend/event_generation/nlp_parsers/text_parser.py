@@ -93,10 +93,10 @@ class TextToEventParser:
                             -- if names are provided without email addresses, include the names in the description. but leave the attendees list empty.
                         - is_recurring: bool
                             -- if the event is recurring, set this to true. and provide the recurrence pattern
-                            -- if the recurrence is not specified, assume it's a one-time event and set is_reccuring to false.
+                            -- if the recurrence is not specified, assume it's a one-time event and set is_recurring to false.
                         - recurrence_pattern: Optional[str]
                             -- if the event is recurring, provide the recurrence pattern. otherwise, leave it null
-                            -- try to imply the reccurence pattern from the text. if it is not clear, default to WEEKLY. Use context if the event is something like a bithday or holiday.
+                            -- try to imply the recurrence pattern from the text. if it is not clear, default to WEEKLY. Use context if the event is something like a bithday or holiday.
                             -- if the event happens on multiple days in a row mark is as daily.
                             -- if it skips days or repeats weekly and/or includes multiple days of the week, mark it as weekly.
                             -- if the event happens monthly or yearly mark it as monthly or yearly.
@@ -105,7 +105,7 @@ class TextToEventParser:
                                 ---DAILY, WEEKLY, MONTHLY, YEARLY
                         -recurrence_days: Optional[List[str]]
                             -- if the event is recurring, provide the days of the week it occurs on as a list. otherwise, leave it null.
-                            -- reccurance_days should only be in the following formats:
+                            -- recurrance_days should only be in the following formats:
                                 --MO, TU, WE, TH, FR, SA, SU
                         -recurrence_count: Optional[int]
                             -- if the event is recurring, try to tell if the user specifies the number of recurrences or the end date, if the number of recurrences is specified, provide it. otherwise, leave it null.
