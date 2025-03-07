@@ -282,17 +282,50 @@ export function CalendarConverter() {
 
   return (
     <Container>
-      <Card className="w-full border-[#218F98] bg-white/95 shadow-sm relative 
-        md:flex-row md:items-stretch
-        flex-col items-center">
+      <Card className="w-full h-full
+        md:border-[#218F98] 
+        md:bg-white/95 
+        md:shadow-sm 
+        relative
+        md:flex-row 
+        md:items-stretch
+        flex-col 
+        items-center
+        border-0
+        md:border-2
+        bg-white
+        md:bg-white/95
+        shadow-none
+        md:shadow-sm">
         <Sparkle position="left" />
         <Sparkle position="right" />
         
         {/* Header Section */}
         <div className="w-full md:w-auto">
-          <CardHeader className="relative px-4 sm:px-8 pt-8 md:pb-0">
+          <CardHeader className="relative 
+            md:px-8 
+            px-4 
+            pt-6
+            md:pt-8 
+            md:pb-0">
             <Logo />
-            <CardTitle className="text-center heading-signika text-[1.4rem] xs:text-[1.6rem] sm:text-[2rem] md:text-[2.4rem] text-[#071E37] tracking-[0.1em] xs:tracking-[0.12em] sm:tracking-[0.15em] font-light uppercase">
+            <CardTitle className="text-center heading-signika 
+              text-[1.2rem] 
+              xs:text-[1.4rem] 
+              sm:text-[1.8rem] 
+              md:text-[2.2rem] 
+              lg:text-[2.6rem] 
+              xl:text-[3rem] 
+              text-[#071E37] 
+              tracking-[0.1em] 
+              xs:tracking-[0.12em] 
+              sm:tracking-[0.15em] 
+              font-light 
+              uppercase
+              transition-all 
+              duration-300 
+              ease-in-out"
+            >
               Calendarize
             </CardTitle>
             <Tagline />
@@ -300,7 +333,11 @@ export function CalendarConverter() {
         </div>
 
         {/* Content Section */}
-        <CardContent className="w-full space-y-6 md:px-8">
+        <CardContent className="w-full 
+          space-y-4
+          md:space-y-6 
+          px-4
+          md:px-8">
           <HiddenFileInput
             ref={fileInputRef}
             onChange={handleFileUpload}
@@ -402,7 +439,9 @@ export function CalendarConverter() {
             onClick={handleConvert}
             disabled={state.isLoading}
             className="relative w-full bg-[#218F98] text-white text-telegraf 
-              text-sm sm:text-base py-2 overflow-hidden group
+              text-[11px] xs:text-sm sm:text-base md:text-lg lg:text-xl
+              py-2 xs:py-2.5 sm:py-3
+              overflow-hidden group
               transition-all duration-300 ease-in-out
               hover:bg-[#218F98] hover:shadow-lg hover:scale-[1.02]
               active:scale-[0.98]
@@ -413,14 +452,16 @@ export function CalendarConverter() {
               before:transition-transform before:duration-300
               hover:before:scale-x-100 hover:before:opacity-100"
           >
-            <span className="relative z-10 flex items-center justify-center gap-2">
+            <span className="relative z-10 flex items-center justify-center gap-1.5 xs:gap-2">
               {state.isLoading ? (
-                <span className="flex items-center gap-3">
-                  <span className="font-bold tracking-wide text-white text-shadow-sm">Converting</span>
+                <span className="flex items-center gap-2 xs:gap-3">
+                  <span className="font-bold tracking-wide text-white text-shadow-sm whitespace-nowrap">
+                    Converting
+                  </span>
                   <LoadingSpinner />
                 </span>
               ) : (
-                <span className="font-bold tracking-wide text-white text-shadow-sm">
+                <span className="font-bold tracking-wide text-white text-shadow-sm whitespace-nowrap">
                   {state.buttonLabel}
                 </span>
               )}
@@ -433,9 +474,21 @@ export function CalendarConverter() {
       </Card>
 
       {state.events.length > 0 && (
-        <div className="space-y-6 w-full">
+        <div className="space-y-4 
+          md:space-y-6 
+          w-full
+          px-4
+          md:px-0">
           {state.events.map((event, index) => (
-            <Card key={index} className="w-full border-[#218F98] bg-white/95 shadow-sm relative">
+            <Card key={index} className="w-full 
+              md:border-[#218F98] 
+              bg-white
+              md:bg-white/95 
+              shadow-none
+              md:shadow-sm 
+              relative
+              border-0
+              md:border-2">
               <Sparkle position="right" />
               <GeneratedEventDisplay event={event} />
             </Card>
@@ -478,7 +531,12 @@ function LoadingSpinner() {
 // Main layout container
 function Container({ children }: { children: React.ReactNode }) {
   return (
-    <section className="flex flex-col gap-6 w-full max-w-3xl mx-auto px-4 md:px-0">
+    <section className="flex flex-col gap-6 w-full h-full
+      max-w-3xl mx-auto
+      md:px-0 
+      md:py-6
+      min-h-[100dvh]
+      md:min-h-0">
       {children}
     </section>
   );
