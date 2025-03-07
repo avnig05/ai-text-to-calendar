@@ -40,11 +40,11 @@ export function CalendarConverter() {
       let events: CalendarEvent[] = [];
       // events = await generateEvent(text, file);
       if (file && file.type.startsWith("image/")) {
-        events = await generateEventFromImage(file);
+        events = await generateEvent(text, file);
         Analytics.trackCalendarConversion('image', events.length);
       } else {
         // Includes .docx and .txt, or no file at all
-        events = await generateEventFromText(text);
+        events = await generateEvent(text);
         Analytics.trackCalendarConversion('text', events.length);
       }
       
