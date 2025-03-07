@@ -52,7 +52,7 @@ async def convert(
     # Pass file_path (or None) to the parser
     event_list = parser.parse_text(text, local_time, local_tz, file_path)
 
-    # Clean up the uploaded file if it was saved
+    # Clean up the uploaded file
     if file_path is not None:
         try:
             file_path.unlink()
