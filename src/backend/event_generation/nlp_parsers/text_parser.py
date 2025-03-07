@@ -55,7 +55,8 @@ class TextToEventParser:
                         - If only a time is given (e.g., "at 2pm"), assume it refers to today unless the event is clearly in the future.
                         - 24:00 is not a valid time always default to use 23:59 instead.
                         - **If there appear to be multiple events in the text, extract all of them into separate events. But maintain details that apply to multiple events.**
-                        - **If an image is passed in the request, inperpet the image and extract all the details that would be important to the event as well as an exact description**
+                        - **If an image is passed in the request, inperpet the image and extract all the details that would be important to the event as well as an exact description and use it to generate an event**
+                        - **If an image is passed in the request and a custom text is passed as well use the text to inform any modifications to the event that are requested, the image should still be the main source**
                         - It's possible that an image wont have very clear text or might have a wierd format (a screenshot of google calendar for example) do your best to extract the information.
 
                         Extract and return in JSON format:
@@ -237,8 +238,6 @@ class TextToEventParser:
                         else None
                     ),
                 )
-                new_event.set_gcal_link()
-                new_event.set_outlook_link()
                 event_list.append(new_event)
 
         # Catch any errors gracefully
