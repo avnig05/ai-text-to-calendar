@@ -1,7 +1,7 @@
 import { CalendarEvent } from "@/app/types/CalendarEvent";
 
 // Use environment variable with fallback
-const API_BASE_URL = 'https://api.calendarize.ratcliff.cc';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.calendarize.ratcliff.cc';
 const API_EVENT = API_BASE_URL + "/add-to-calendar";
 const API_UPLOAD = API_BASE_URL + "/upload";
 // Function to generate an event from text input
@@ -91,11 +91,16 @@ export const generateEventFromText = async (text: string): Promise<CalendarEvent
 // Function to generate an event from an image file
 export const generateEventFromImage = async (img: File): Promise<CalendarEvent[]> => {
 	try {
+		const local_tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+		const local_time = new Date().toLocaleString('sv-SE', { timeZone: local_tz }).replace(' ', 'T') + 'Z';
 		console.log("file", img);
+		console.log("local time", local_time, local_tz);
 		console.log("Sending request to backend:", API_UPLOAD);
 
 		const formData = new FormData();
 		formData.append("file", img);
+		formData.append("local_tz", local_tz);
+		formData.append("local_time", local_time);
 
     console.log("Sending request to backend");
 		const response = await fetch(API_UPLOAD, {
