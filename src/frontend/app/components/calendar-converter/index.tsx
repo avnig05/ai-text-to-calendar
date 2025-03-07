@@ -16,6 +16,7 @@ import { GeneratedEventDisplay } from "./generated-event";
 import { CalendarEvent } from "@/app/types/CalendarEvent";
 import { generateEvent } from "@/app/utils/eventGenerator";
 import mammoth from "mammoth";
+import { Analytics } from '@/app/lib/analytics'
 
 /**
  * CalendarConverter
@@ -40,13 +41,16 @@ export function CalendarConverter() {
       // events = await generateEvent(text, file);
       if (file && file.type.startsWith("image/")) {
         events = await generateEvent(text, file);
+        Analytics.trackCalendarConversion('image', events.length);
       } else {
         // Includes .docx and .txt, or no file at all
         events = await generateEvent(text);
+        Analytics.trackCalendarConversion('text', events.length);
       }
       
       setGeneratedEvents(events);
     } catch (error) {
+      Analytics.trackError(error as Error, 'calendar_conversion');
       console.error("Error generating event:", error);
     } finally {
       setButtonLabel("Convert to Calendar Event");
@@ -85,6 +89,7 @@ export function CalendarConverter() {
     async (uploadedFile: File) => {
       setFile(uploadedFile);
       setFileURL(URL.createObjectURL(uploadedFile));
+      Analytics.trackFileUpload(uploadedFile.type, uploadedFile.size);
       // Read text if it's .txt or .docx
       if (
         uploadedFile.type === "text/plain" ||
@@ -203,6 +208,7 @@ export function CalendarConverter() {
    */
   const handleTextareaChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setText(e.target.value);
+    Analytics.trackTextInput(e.target.value);
   };
 
   return (
