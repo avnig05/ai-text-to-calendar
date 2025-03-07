@@ -15,8 +15,6 @@ export const exportToICal = (event: CalendarEvent) => {
 	const icsContent = event.ics_string.replace(/\r?\n/g, "\r\n");
 	const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
 	// generate a URL and an anchor element`
-	console.log("blob:", blob);
-	console.log("event:", event.ics_string);
 	const url = URL.createObjectURL(blob);
 	const anchor = document.createElement("a");
 

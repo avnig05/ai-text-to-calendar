@@ -18,123 +18,180 @@ import { generateEvent } from "@/app/utils/eventGenerator";
 import mammoth from "mammoth";
 import { Analytics } from '@/app/lib/analytics'
 
-// Constants
-const ACCEPTED_FILE_TYPES = {
-  TEXT: "text/plain",
-  DOCX: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  IMAGE: "image/"
+// Constants moved to a separate configuration file
+const CONFIG = {
+  ACCEPTED_FILE_TYPES: {
+    TEXT: "text/plain",
+    DOCX: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    IMAGE: "image/"
+  },
+  ANIMATIONS: {
+    BUTTON: `absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent 
+      transform transition-transform duration-1000 ease-in-out`,
+    BEAM_DELAY: {
+      RIGHT: 0,
+      DOWN: 750,
+      LEFT: 1500,
+      UP: 2250
+    }
+  },
+  UI: {
+    HEIGHTS: {
+      MOBILE: {
+        BASE: "120px",
+        XS: "140px",
+        SM: "160px"
+      },
+      DESKTOP: {
+        BASE: "180px",
+        LG: "200px"
+      }
+    },
+    COLORS: {
+      PRIMARY: "#218F98",
+      TEXT: "#071E37",
+      SECONDARY: "#6B909F"
+    }
+  }
+} as const;
+
+// Error handling utility
+const handleError = (error: Error, context: string) => {
+  Analytics.trackError(error, context);
+  console.error(`Error in ${context}:`, error);
 };
 
-const BUTTON_ANIMATION_CLASSES = `
-  absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent 
-  transform transition-transform duration-1000 ease-in-out
-`;
+// File handling utilities
+const isValidFileType = (file: File): boolean => {
+  return Object.values(CONFIG.ACCEPTED_FILE_TYPES).some(type => 
+    file.type.startsWith(type)
+  );
+};
+
+const processFile = async (file: File): Promise<string> => {
+  if (file.type === CONFIG.ACCEPTED_FILE_TYPES.TEXT) {
+    return await readTextFile(file);
+  } else if (file.type === CONFIG.ACCEPTED_FILE_TYPES.DOCX) {
+    return await readDocxFile(file);
+  }
+  return '';
+};
+
+const readTextFile = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target?.result as string || '');
+    reader.onerror = () => reject(new Error('Error reading text file'));
+    reader.readAsText(file);
+  });
+};
+
+const readDocxFile = async (file: File): Promise<string> => {
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const result = await mammoth.extractRawText({ arrayBuffer });
+    return result.value;
+  } catch {
+    throw new Error('Error extracting text from DOCX');
+  }
+};
 
 /**
  * CalendarConverter
  * Processes text, images, and .docx files to generate a calendar event.
  */
 export function CalendarConverter() {
-  const [text, setText] = useState("");
-  const [generatedEvents, setGeneratedEvents] = useState<CalendarEvent[]>([]);
-  const [buttonLabel, setButtonLabel] = useState("Convert to Calendar Event");
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [state, setState] = useState<{
+    text: string;
+    events: CalendarEvent[];
+    buttonLabel: string;
+    file: File | null;
+    fileURL: string | null;
+    isLoading: boolean;
+  }>({
+    text: "",
+    events: [],
+    buttonLabel: "Convert to Calendar Event",
+    file: null,
+    fileURL: null,
+    isLoading: false
+  });
 
-  const [file, setFile] = useState<File | null>(null);
-  const [fileURL, setFileURL] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   /**
    * Handles the core conversion logic, detecting whether to convert text or image.
    */
   const handleConvert = useCallback(async () => {
-    setIsLoading(true);
-    setButtonLabel("Converting");
+    setState(prev => ({ ...prev, isLoading: true, buttonLabel: "Converting" }));
+    
     try {
-      let events: CalendarEvent[] = [];
-      if (file && file.type.startsWith(ACCEPTED_FILE_TYPES.IMAGE)) {
-        events = await generateEvent(text, file);
-        Analytics.trackCalendarConversion('image', events.length);
-      } else {
-        // Includes .docx and .txt, or no file at all
-        events = await generateEvent(text);
-        Analytics.trackCalendarConversion('text', events.length);
-      }
-      
-      setGeneratedEvents(events);
-    } catch (error) {
-      Analytics.trackError(error as Error, 'calendar_conversion');
-      console.error("Error generating event:", error);
-    } finally {
-      setIsLoading(false);
-      setButtonLabel("Convert to Calendar Event");
-    }
-  }, [file, text]);
+      const events = state.file?.type.startsWith(CONFIG.ACCEPTED_FILE_TYPES.IMAGE)
+        ? await generateEvent(state.text, state.file)
+        : await generateEvent(state.text);
 
-  /**
-   * Reads and sets the text from a .txt or .docx file.
-   */
-  const readTextFromFile = useCallback(async (uploadedFile: File) => {
-    if (uploadedFile.type === ACCEPTED_FILE_TYPES.TEXT) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result;
-        if (typeof result === 'string') {
-          setText(result);
-        }
-      };
-      reader.readAsText(uploadedFile);
-    } else if (uploadedFile.type === ACCEPTED_FILE_TYPES.DOCX) {
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const arrayBuffer = e.target?.result as ArrayBuffer;
-        try {
-          const result = await mammoth.extractRawText({ arrayBuffer });
-          setText(result.value);
-        } catch (error) {
-          console.error("Error extracting text from DOCX:", error);
-        }
-      };
-      reader.readAsArrayBuffer(uploadedFile);
+      Analytics.trackCalendarConversion(
+        state.file?.type.startsWith(CONFIG.ACCEPTED_FILE_TYPES.IMAGE) ? 'image' : 'text',
+        events.length
+      );
+
+      setState(prev => ({ ...prev, events }));
+    } catch (error) {
+      handleError(error as Error, 'calendar_conversion');
+    } finally {
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        buttonLabel: "Convert to Calendar Event"
+      }));
     }
-  }, []);
+  }, [state.file, state.text]);
 
   /**
    * Sets file state and reads text if necessary (.txt or .docx).
    */
-  const handleFileSelection = useCallback(
-    async (uploadedFile: File) => {
-      setFile(uploadedFile);
-      setFileURL(URL.createObjectURL(uploadedFile));
-      Analytics.trackFileUpload(uploadedFile.type, uploadedFile.size);
-      
-      // Read text if it's .txt or .docx
-      const isTextFile = uploadedFile.type === ACCEPTED_FILE_TYPES.TEXT;
-      const isDocxFile = uploadedFile.type === ACCEPTED_FILE_TYPES.DOCX;
-      
-      if (isTextFile || isDocxFile) {
-        await readTextFromFile(uploadedFile);
-      }
-    },
-    [readTextFromFile]
-  );
-
-  // Helper function to handle all types of files
-  const handleFile = useCallback(async (file: File | null) => {
-    if (file) {
-      await handleFileSelection(file);
+  const handleFileSelection = useCallback(async (uploadedFile: File) => {
+    if (!isValidFileType(uploadedFile)) {
+      handleError(new Error('Invalid file type'), 'file_upload');
+      return;
     }
-  }, [handleFileSelection]);
+
+    try {
+      const fileURL = URL.createObjectURL(uploadedFile);
+      const text = await processFile(uploadedFile);
+      
+      setState(prev => ({
+        ...prev,
+        file: uploadedFile,
+        fileURL,
+        text: text || prev.text
+      }));
+
+      Analytics.trackFileUpload(uploadedFile.type, uploadedFile.size);
+    } catch (error) {
+      handleError(error as Error, 'file_processing');
+    }
+  }, []);
+
+  // Cleanup effect
+  useEffect(() => {
+    return () => {
+      if (state.fileURL) {
+        URL.revokeObjectURL(state.fileURL);
+      }
+    };
+  }, [state.fileURL]);
 
   /**
    * File input change handler for manual selection.
    */
   const handleFileUpload = useCallback(
     async (e: ChangeEvent<HTMLInputElement>) => {
-      const uploadedFile = e.target.files?.[0] || null;
-      await handleFile(uploadedFile);
+      const uploadedFile = e.target.files?.[0] || null
+      if(!uploadedFile) return;
+      await handleFileSelection(uploadedFile);
     },
-    [handleFile]
+    [handleFileSelection]
   );
 
   /**
@@ -151,9 +208,9 @@ export function CalendarConverter() {
     async (e: DragEvent) => {
       e.preventDefault();
       const droppedFile = e.dataTransfer.files?.[0];
-      await handleFile(droppedFile);
+      await handleFileSelection(droppedFile);
     },
-    [handleFile]
+    [handleFileSelection]
   );
 
   /**
@@ -162,15 +219,15 @@ export function CalendarConverter() {
   const handlePastedImage = useCallback((items: DataTransferItemList) => {
     const itemsArray = Array.from(items);
     for (const item of itemsArray) {
-      if (item.type.startsWith(ACCEPTED_FILE_TYPES.IMAGE)) {
+      if (item.type.startsWith(CONFIG.ACCEPTED_FILE_TYPES.IMAGE)) {
         const file = item.getAsFile();
         if (file) {
-          handleFile(file);
+          handleFileSelection(file);
           break; // Process only the first image
         }
       }
     }
-  }, [handleFile]);
+  }, [handleFileSelection]);
 
   /**
    * Local paste handler for FileUploadZone
@@ -199,12 +256,13 @@ export function CalendarConverter() {
     };
   }, [handlePastedImage]);
 
+  
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter") {
       if (e.shiftKey) {
         // Shift + Enter: Insert a new line
         e.preventDefault();
-        setText((prev) => prev + "\n");
+        setState(prev => ({ ...prev, text: prev.text + "\n" }));
       } else {
         // Enter: Submit the form
         e.preventDefault();
@@ -217,70 +275,132 @@ export function CalendarConverter() {
    * Textarea change handler for manual text input.
    */
   const handleTextareaChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
-    setText(e.target.value);
-    Analytics.trackTextInput(e.target.value);
+    const newText = e.target.value;
+    setState(prev => ({ ...prev, text: newText }));
+    Analytics.trackTextInput(newText);
   };
 
   return (
     <Container>
-      <Card className="w-full border-[#218F98] bg-white/95 shadow-sm relative">
+      <Card className="w-full border-[#218F98] bg-white/95 shadow-sm relative 
+        md:flex-row md:items-stretch
+        flex-col items-center">
         <Sparkle position="left" />
         <Sparkle position="right" />
-        <CardHeader className="relative px-4 sm:px-8 pt-8">
-          <Logo />
-          <CardTitle className="text-center heading-signika text-[1.2rem] xs:text-[1.4rem] sm:text-[1.8rem] md:text-[2.2rem] text-[#071E37] tracking-[0.1em] xs:tracking-[0.12em] sm:tracking-[0.15em] font-light uppercase">
-            Calendarize
-          </CardTitle>
-          <Tagline />
-        </CardHeader>
-        <CardContent className="space-y-6">
+        
+        {/* Header Section */}
+        <div className="w-full md:w-auto">
+          <CardHeader className="relative px-4 sm:px-8 pt-8 md:pb-0">
+            <Logo />
+            <CardTitle className="text-center heading-signika text-[1.4rem] xs:text-[1.6rem] sm:text-[2rem] md:text-[2.4rem] text-[#071E37] tracking-[0.1em] xs:tracking-[0.12em] sm:tracking-[0.15em] font-light uppercase">
+              Calendarize
+            </CardTitle>
+            <Tagline />
+          </CardHeader>
+        </div>
+
+        {/* Content Section */}
+        <CardContent className="w-full space-y-6 md:px-8">
           <HiddenFileInput
             ref={fileInputRef}
             onChange={handleFileUpload}
             accept=".png, .jpeg, .jpg, .txt, .docx"
             title="Upload a text, image, or document file"
           />
-          <FileUploadZone
-            onClick={() => fileInputRef.current?.click()}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-            onPaste={handlePaste}
-            fileURL={fileURL}
-          />
-          <div className="relative p-4 bg-white/50 rounded-lg">
-            <textarea
-              placeholder="Enter event details (date, time, topic, description) for better results."
-              value={text}
-              onChange={handleTextareaChange}
-              onKeyDown={handleKeyDown}
-              className="min-h-[100px] 
-                font-medium
-                text-telegraf 
-                border-2 border-[#A5C3C2] 
-                focus:border-[#218F98] 
-                bg-white/95 
-                placeholder:text-[#218F98]/80
-                placeholder:text-base
-                placeholder:font-medium
-                placeholder:italic
-                text-[#071E37] 
-                text-xl
-                tracking-wide
-                leading-7
-                w-full 
-                rounded-lg 
-                max-h-40 
-                overflow-y-auto 
-                p-6
-                transition-colors
-                duration-200
-                focus:outline-none
-                resize-none"
+          
+          {/* Mobile-specific layout */}
+          <div className="flex flex-col md:hidden space-y-4">
+            <FileUploadZone
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              onPaste={handlePaste}
+              fileURL={state.fileURL}
             />
+            <div className="relative bg-white/50 rounded-lg w-full">
+              <textarea
+                placeholder="Enter event details (date, time, topic, description) for better results."
+                value={state.text}
+                onChange={handleTextareaChange}
+                onKeyDown={handleKeyDown}
+                className="h-[120px]
+                  font-medium
+                  text-telegraf 
+                  border-2
+                  border-[#218F98]
+                  bg-white/95 
+                  placeholder:text-[#218F98]/80
+                  placeholder:text-sm
+                  placeholder:font-medium
+                  placeholder:italic
+                  text-[#071E37] 
+                  text-base
+                  tracking-wide
+                  leading-6
+                  w-full
+                  rounded-lg 
+                  overflow-y-auto 
+                  p-4
+                  transition-all
+                  duration-300
+                  ease-in-out
+                  focus:outline-none
+                  focus:border-[#218F98]
+                  hover:shadow-[0_0_15px_rgba(33,143,152,0.15)]
+                  focus:shadow-[0_0_15px_rgba(33,143,152,0.2)]
+                  resize-none"
+              />
+            </div>
           </div>
+
+          {/* Desktop-specific layout */}
+          <div className="hidden md:flex md:flex-col md:space-y-6">
+            <FileUploadZone
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              onPaste={handlePaste}
+              fileURL={state.fileURL}
+            />
+            <div className="relative bg-white/50 rounded-lg w-full">
+              <textarea
+                placeholder="Enter event details (date, time, topic, description) for better results."
+                value={state.text}
+                onChange={handleTextareaChange}
+                onKeyDown={handleKeyDown}
+                className="h-[180px]
+                  font-medium
+                  text-telegraf 
+                  border-2
+                  border-[#218F98]
+                  bg-white/95 
+                  placeholder:text-[#218F98]/80
+                  placeholder:text-base
+                  placeholder:font-medium
+                  placeholder:italic
+                  text-[#071E37] 
+                  text-xl
+                  tracking-wide
+                  leading-7
+                  w-full
+                  rounded-lg 
+                  overflow-y-auto 
+                  p-6
+                  transition-all
+                  duration-300
+                  ease-in-out
+                  focus:outline-none
+                  focus:border-[#218F98]
+                  hover:shadow-[0_0_15px_rgba(33,143,152,0.15)]
+                  focus:shadow-[0_0_15px_rgba(33,143,152,0.2)]
+                  resize-none"
+              />
+            </div>
+          </div>
+
           <Button
             onClick={handleConvert}
-            disabled={isLoading}
+            disabled={state.isLoading}
             className="relative w-full bg-[#218F98] text-white text-telegraf 
               text-sm sm:text-base py-2 overflow-hidden group
               transition-all duration-300 ease-in-out
@@ -294,27 +414,27 @@ export function CalendarConverter() {
               hover:before:scale-x-100 hover:before:opacity-100"
           >
             <span className="relative z-10 flex items-center justify-center gap-2">
-              {isLoading ? (
+              {state.isLoading ? (
                 <span className="flex items-center gap-3">
                   <span className="font-bold tracking-wide text-white text-shadow-sm">Converting</span>
                   <LoadingSpinner />
                 </span>
               ) : (
                 <span className="font-bold tracking-wide text-white text-shadow-sm">
-                  {buttonLabel}
+                  {state.buttonLabel}
                 </span>
               )}
             </span>
-            <div className={`${BUTTON_ANIMATION_CLASSES}
-              ${isLoading ? 'animate-shimmer' : 'translate-x-[-100%] group-hover:translate-x-[100%]'}`}>
+            <div className={`${CONFIG.ANIMATIONS.BUTTON}
+              ${state.isLoading ? 'animate-shimmer' : 'translate-x-[-100%] group-hover:translate-x-[100%]'}`}>
             </div>
           </Button>
         </CardContent>
       </Card>
 
-      {generatedEvents.length > 0 && (
+      {state.events.length > 0 && (
         <div className="space-y-6 w-full">
-          {generatedEvents.map((event, index) => (
+          {state.events.map((event, index) => (
             <Card key={index} className="w-full border-[#218F98] bg-white/95 shadow-sm relative">
               <Sparkle position="right" />
               <GeneratedEventDisplay event={event} />
@@ -358,7 +478,7 @@ function LoadingSpinner() {
 // Main layout container
 function Container({ children }: { children: React.ReactNode }) {
   return (
-    <section className="flex flex-col gap-6 w-full max-w-3xl mx-auto">
+    <section className="flex flex-col gap-6 w-full max-w-3xl mx-auto px-4 md:px-0">
       {children}
     </section>
   );
@@ -377,7 +497,7 @@ function Sparkle({ position }: { position: "left" | "right" }) {
 // Logo block
 function Logo() {
   return (
-    <div className="flex justify-center mb-3">
+    <div className="flex justify-center mb-1">
       <div className="w-12 h-12 sm:w-16 sm:h-16 border-2 border-[#218F98] rounded-lg relative flex items-center justify-center">
         <span className="text-[#218F98] text-xl sm:text-2xl font-light heading-signika">
           CZ
@@ -401,11 +521,13 @@ function Dot() {
 // Tagline under the title
 function Tagline() {
   return (
-    <div className="text-center text-telegraf text-[#6B909F] mt-1 space-y-0.5">
-      <p className="tracking-wide text-[0.7rem] xs:text-[0.8rem] sm:text-xs uppercase">
+    <div className="text-center mt-6 space-y-1">
+      <p className="text-[#218F98] tracking-[0.15em] text-[0.7rem] xs:text-[0.8rem] sm:text-[0.9rem] 
+        font-bold heading-signika uppercase">
         Effortless Scheduling.
       </p>
-      <p className="tracking-wide text-[0.7rem] xs:text-[0.8rem] sm:text-xs uppercase">
+      <p className="text-[#6B909F] tracking-[0.15em] text-[0.7rem] xs:text-[0.8rem] sm:text-[0.9rem] 
+        font-bold heading-signika uppercase">
         Instant Planning.
       </p>
     </div>
@@ -436,11 +558,28 @@ function FileUploadZone({ onClick, onDragOver, onDrop, onPaste, fileURL }: FileU
       onDragOver={onDragOver}
       onDrop={onDrop}
       onPaste={onPaste}
-      className="border-2 border-dashed border-[#218F98] rounded-lg p-12 text-center cursor-pointer hover:bg-[#218F98]/5 transition-colors"
+      className="group relative border-2 border-dashed border-[#218F98] rounded-lg 
+        p-6 md:p-12 text-center cursor-pointer 
+        hover:bg-[#218F98]/5 transition-colors
+        min-h-[120px] md:min-h-[180px]"
       role="button"
       tabIndex={0}
       aria-label="Upload file area. Click or drag files here."
     >
+      {/* Smooth beam effect container */}
+      <div className="absolute inset-0 rounded-lg overflow-hidden">
+        <div className="absolute inset-0 rounded-lg">
+          <div className="absolute top-0 left-0 w-[50%] h-[2px] bg-gradient-to-r from-transparent via-[#218F98]/40 to-transparent
+            animate-[beam-move-right_3s_ease-in-out_infinite]" />
+          <div className="absolute top-0 right-0 w-[2px] h-[50%] bg-gradient-to-b from-transparent via-[#218F98]/40 to-transparent
+            animate-[beam-move-down_3s_ease-in-out_infinite] delay-750" />
+          <div className="absolute bottom-0 right-0 w-[50%] h-[2px] bg-gradient-to-r from-transparent via-[#218F98]/40 to-transparent
+            animate-[beam-move-left_3s_ease-in-out_infinite] delay-1500" />
+          <div className="absolute bottom-0 left-0 w-[2px] h-[50%] bg-gradient-to-b from-transparent via-[#218F98]/40 to-transparent
+            animate-[beam-move-up_3s_ease-in-out_infinite] delay-2250" />
+        </div>
+      </div>
+
       <div className="flex flex-col items-center gap-4">
         <UploadIcon />
         <p className="text-sm text-[#218F98] uppercase tracking-wider font-bold">

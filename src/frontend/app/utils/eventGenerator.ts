@@ -36,25 +36,24 @@ export const generateEvent = async (
 		});
 
 		if (!response.ok) {
-		console.log("bad response:", response);
-		return [
-			{
-				title: "Sample Event",
-				time_zone: "America/Los_Angeles",
-				start_time: "",
-				end_time: "",
-				description: "This is a sample event created from the input text.",
-				location: "",
-				attendees: [],
-				gcal_link: "",
-				outlook_link: "",
-				ics_string: "",
-			},
-		];
+			console.error("Error generating event:", response.statusText);
+			return [
+				{
+					title: "Sample Event",
+					time_zone: "America/Los_Angeles",
+					start_time: "",
+					end_time: "",
+					description: "Something went wrong while generating this event :(",
+					location: "",
+					attendees: [],
+					gcal_link: "",
+					outlook_link: "",
+					ics_string: "",
+				},
+			];
 		}
 
 		const data = await response.json();
-		console.log("Response data:", data);
 
 		// Ensure response is a list of events
 		if (!Array.isArray(data)) {
@@ -71,8 +70,8 @@ export const generateEvent = async (
 		location: event.location || "",
 		attendees: event.attendees || [],
 		gcal_link: event.gcal_link || "",
-		outlook_link: event.outlook_link || "",
-		ics_string: event.ics_string || "",
+		outlook_link: event.outlook_link || ``,
+		ics_string: event.ics || "",
 		}));
 
 		return events;

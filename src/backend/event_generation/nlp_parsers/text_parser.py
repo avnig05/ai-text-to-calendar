@@ -56,8 +56,10 @@ class TextToEventParser:
                         - 24:00 is not a valid time always default to use 23:59 instead.
                         - **If there appear to be multiple events in the text, extract all of them into separate events. But maintain details that apply to multiple events.**
                         - **If an image is passed in the request, inperpet the image and extract all the details that would be important to the event as well as an exact description and use it to generate an event**
-                        - **If an image is passed in the request and a custom text is passed as well use the text to inform any modifications to the event that are requested, the image should still be the main source**
                         - It's possible that an image wont have very clear text or might have a wierd format (a screenshot of google calendar for example) do your best to extract the information.
+                        -**If Image is passed along with text, unless there is context that shows the text is "edititng" the image, assume the text is in addition to the image and not a replacement for it.**
+                        - if the text appears to be editing the image, make the event first, and then understand the context and use the text to update the event parsed from the image.
+                        - if the text appears to be editing the image but only one of the events in the image is being edited, only update that event, but still return all the events from the image.
 
                         Extract and return in JSON format:
                         - title: str **a title is required never leave it null**
