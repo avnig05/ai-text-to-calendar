@@ -2,7 +2,8 @@
 import type { Metadata } from "next"
 import "./globals.css"
 import { GeistSans, GeistMono } from "geist/font"
-import ClientLayout from "./layout.client" // the client layout
+import ClientLayout from "./layout.client"
+import { Suspense } from 'react'
 
 export const metadata: Metadata = {
   title: "Calendarize",
@@ -13,9 +14,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}>
-        <ClientLayout>
-          {children}
-        </ClientLayout>
+        <Suspense fallback={<div>Loading analytics...</div>}>
+          <ClientLayout>
+            {children}
+          </ClientLayout>
+        </Suspense>
       </body>
     </html>
   )
