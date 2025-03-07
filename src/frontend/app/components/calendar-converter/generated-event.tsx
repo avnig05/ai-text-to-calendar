@@ -12,10 +12,9 @@ interface GeneratedEventDisplayProps {
 
 export function GeneratedEventDisplay({ event }: GeneratedEventDisplayProps) {
   const formatDateTime = (date: string) => {
-    // console.log("Date:", date)
     const parsed = parseISO(date)
     if (!isValid(parsed)) {
-      console.log("Invalid date:", date)
+      console.error("Invalid date:", date)
       return "Invalid date"
     }
     return format(parsed, "yyyy-MM-dd HH:mm")
@@ -54,27 +53,51 @@ export function GeneratedEventDisplay({ event }: GeneratedEventDisplayProps) {
 
 /* Local sub-components */
 
+// Button styling constants to avoid repetition
+const EXPORT_BUTTON_CLASSES = `
+  relative w-full bg-[#218F98] text-white text-telegraf 
+  text-xs sm:text-sm px-2 py-1.5 overflow-hidden group
+  transition-all duration-300 ease-in-out
+  hover:bg-[#218F98] hover:shadow-lg hover:scale-[1.02]
+  active:scale-[0.98]
+  disabled:opacity-50 disabled:cursor-not-allowed
+  before:absolute before:inset-0 
+  before:bg-white/10 before:transform before:scale-x-0 
+  before:opacity-0 before:origin-left
+  before:transition-transform before:duration-300
+  hover:before:scale-x-100 hover:before:opacity-100
+`;
+
 // Shows export buttons
 function ExportSection({ event }: { event: CalendarEvent }) {
+  const renderExportButton = (
+    label: string, 
+    onClick?: () => void
+  ) => (
+    <Button
+      className={EXPORT_BUTTON_CLASSES}
+      onClick={onClick}
+    >
+      <span className="relative z-10 flex items-center justify-center gap-1">
+        <span className="font-medium tracking-wide text-white text-shadow-sm">{label}</span>
+        <span className="transform transition-transform duration-300 group-hover:translate-x-1 text-white">
+          →
+        </span>
+      </span>
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent 
+        transform translate-x-[-100%] group-hover:translate-x-[100%] 
+        transition-transform duration-1000 ease-in-out">
+      </div>
+    </Button>
+  );
+
   return (
     <div className="space-y-2">
       <p className="text-[#6B909F] text-sm text-telegraf">Export to:</p>
       <div className="grid grid-cols-3 gap-2">
-        <Button
-          className="w-full bg-[#218F98] text-white hover:bg-[#218F98]/90 text-telegraf font-normal text-xs sm:text-sm px-2 py-1.5"
-          onClick={() => exportToGoogleCalendar(event)}
-        >
-          Google Calendar
-        </Button>
-        <Button
-          className="w-full bg-[#218F98] text-white hover:bg-[#218F98]/90 text-telegraf font-normal text-xs sm:text-sm px-2 py-1.5"
-          onClick={() => exportToOutlook(event)}
-        >
-          Outlook
-        </Button>
-        <Button className="w-full bg-[#218F98] text-white hover:bg-[#218F98]/90 text-telegraf font-normal text-xs sm:text-sm px-2 py-1.5">
-          Apple Calendar
-        </Button>
+        {renderExportButton("Google Calendar", () => exportToGoogleCalendar(event))}
+        {renderExportButton("Outlook", () => exportToOutlook(event))}
+        {renderExportButton("Apple Calendar")}
       </div>
     </div>
   )
@@ -106,7 +129,7 @@ function IconWrapper({ children }: { children: React.ReactNode }) {
 // Icons
 function CalendarIcon() {
   return (
-    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -122,7 +145,7 @@ function CalendarIcon() {
 }
 function TimeIcon() {
   return (
-    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -136,7 +159,7 @@ function TimeIcon() {
 }
 function LinesIcon() {
   return (
-    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
       <path
         strokeLinecap="round" 
         strokeLinejoin="round" 
