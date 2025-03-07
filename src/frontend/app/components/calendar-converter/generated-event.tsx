@@ -1,7 +1,7 @@
 import React from "react"
 import { CalendarEvent } from "@/app/types/CalendarEvent"
 import { Card, CardHeader, CardTitle, CardContent } from "@/app/components/ui/card"
-import { exportToGoogleCalendar, exportToOutlook } from "@/app/utils/calendarExport"
+import { exportToGoogleCalendar, exportToICal, exportToOutlook } from "@/app/utils/calendarExport"
 import { Button } from "@/app/components/ui/button"
 import { format, parseISO, isValid } from "date-fns"
 
@@ -39,11 +39,27 @@ export function GeneratedEventDisplay({ event }: GeneratedEventDisplayProps) {
             text={`${formatDateTime(event.start_time)} - ${formatDateTime(event.end_time)}`}
             contentClass="text-telegraf text-[#6B909F]"
           />
-          <SectionRow
-            icon={<LinesIcon />}
-            text={event.description}
-            contentClass="text-telegraf text-[#6B909F]"
-          />
+          {event.description && (
+            <SectionRow
+              icon={<LinesIcon />}
+              text={event.description}
+              contentClass="text-telegraf text-[#6B909F]"
+            />
+          )}
+          {event.location && (
+            <SectionRow
+              icon={<LocationIcon />}
+              text={event.location}
+              contentClass="text-telegraf text-[#6B909F]"
+            />
+          )}
+          {event.attendees.length > 0 && (
+            <SectionRow
+              icon={<EmailIcon />}
+              text={event.attendees.join(", ")}
+              contentClass="text-telegraf text-[#6B909F]"
+            />
+          )}
         </div>
         <ExportSection event={event} />
       </CardContent>
@@ -95,9 +111,9 @@ function ExportSection({ event }: { event: CalendarEvent }) {
     <div className="space-y-2">
       <p className="text-[#6B909F] text-sm text-telegraf">Export to:</p>
       <div className="grid grid-cols-3 gap-2">
-        {renderExportButton("Google Calendar", () => exportToGoogleCalendar(event))}
+        {renderExportButton("Google", () => exportToGoogleCalendar(event))}
         {renderExportButton("Outlook", () => exportToOutlook(event))}
-        {renderExportButton("Apple Calendar")}
+        {renderExportButton("Apple (ICS)", () => exportToICal(event))}
       </div>
     </div>
   )
@@ -134,11 +150,7 @@ function CalendarIcon() {
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth={2}
-        d="M8 7V3m8 4V3m-9 8h10
-           M5 21h14a2 2 0 002-2V7
-           a2 2 0 00-2-2H5a2 2 0
-           00-2 2v12a2 2 0 
-           002 2z"
+        d="M8 7V3m8 4V3m-9 8h10 M5 21h14a2 2 0 002-2V7 a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
       />
     </svg>
   )
@@ -150,9 +162,7 @@ function TimeIcon() {
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth={2}
-        d="M12 8v4l3 3m6-3a9 9 
-           0 11-18 0 9 9 
-           0 0118 0z"
+        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
       />
     </svg>
   )
@@ -164,8 +174,38 @@ function LinesIcon() {
         strokeLinecap="round" 
         strokeLinejoin="round" 
         strokeWidth={2}
-        d="M4 6h16M4 10h16
-           M4 14h16M4 18h16"
+        d="M4 6h16M4 10h16 M4 14h16M4 18h16"
+      />
+    </svg>
+  )
+}
+function LocationIcon() {
+  return (
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M12 2C8.134 2 5 5.134 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.866-3.134-7-7-7z"
+      />
+      <circle cx="12" cy="9" r="2.5" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+    </svg>
+  )
+}
+
+function EmailIcon() {
+  return (
+    <svg 
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      strokeWidth={2}
+      aria-hidden="true"
+    >
+      <path 
+        strokeLinecap="round" 
+        strokeLinejoin="round" 
+        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
       />
     </svg>
   )

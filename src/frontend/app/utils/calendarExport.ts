@@ -10,26 +10,22 @@ export const exportToOutlook = (event: CalendarEvent) => {
 	window.open(url, "_blank");
 };
 
-// export const exportToAppleCalendar = (event: CalendarEvent) => {
-// // 	const startTime = event.start_time
-// // 		.toISOString()
-// // 		.replace(/-|:|\.\d\d\d/g, "");
-// // 	const endTime = event.endTime.toISOString().replace(/-|:|\.\d\d\d/g, "");
+export const exportToICal = (event: CalendarEvent) => {
+	// load the calendar string as a blob
+	const icsContent = event.ics_string.replace(/\r?\n/g, "\r\n");
+	const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
+	// generate a URL and an anchor element`
+	console.log("blob:", blob);
+	console.log("event:", event.ics_string);
+	const url = URL.createObjectURL(blob);
+	const anchor = document.createElement("a");
 
-// // 	const url = `data:text/calendar;charset=utf-8,BEGIN:VCALENDAR
-// // VERSION:2.0
-// // BEGIN:VEVENT
-// // DTSTART:${startTime}
-// // DTEND:${endTime}
-// // SUMMARY:${event.title}
-// // DESCRIPTION:${event.description}
-// // END:VEVENT
-// // END:VCALENDAR`;
-// // event = event;
-// // 	const link = document.createElement("a");
-// // 	link.href = encodeURI(url);
-// // 	link.download = "event.ics";
-// // 	document.body.appendChild(link);
-// // 	link.click();
-// // 	document.body.removeChild(link);
-// };
+	const fileName = event.title.replace(/ /g, "_");
+
+	anchor.href = url;
+	anchor.download = `${fileName}.ics`;
+	document.body.appendChild(anchor);
+	anchor.click();
+	document.body.removeChild(anchor);
+	URL.revokeObjectURL(url);
+};

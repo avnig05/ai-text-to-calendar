@@ -39,13 +39,16 @@ export const generateEvent = async (
 		console.log("bad response:", response);
 		return [
 			{
-			title: "Sample Event",
-			description: "This is a sample event created from the input text.",
-			start_time: "",
-			time_zone: "America/Los_Angeles",
-			end_time: "",
-			gcal_link: "",
-			outlook_link: "",
+				title: "Sample Event",
+				time_zone: "America/Los_Angeles",
+				start_time: "",
+				end_time: "",
+				description: "This is a sample event created from the input text.",
+				location: "",
+				attendees: [],
+				gcal_link: "",
+				outlook_link: "",
+				ics_string: "",
 			},
 		];
 		}
@@ -61,12 +64,15 @@ export const generateEvent = async (
 		// Map response events to CalendarEvent format
 		const events: CalendarEvent[] = data.map((event) => ({
 		title: event.title || "Sample Event",
-		start_time: event.start_time,
 		time_zone: event.time_zone || "America/Los_Angeles",
+		start_time: event.start_time,
 		end_time: event.end_time,
 		description: event.description || "No description provided for this event.",
+		location: event.location || "",
+		attendees: event.attendees || [],
 		gcal_link: event.gcal_link || "",
 		outlook_link: event.outlook_link || "",
+		ics_string: event.ics_string || "",
 		}));
 
 		return events;
@@ -76,12 +82,15 @@ export const generateEvent = async (
 		return [
 		{
 			title: "Sample Event",
-			description: "This is a sample event created from the input text.",
-			start_time: "",
 			time_zone: "America/Los_Angeles",
+			start_time: "",
 			end_time: "",
+			description: "This is a sample event created from the input text.",
+			location: "",
+			attendees: [],
 			gcal_link: "",
 			outlook_link: "",
+			ics_string: "",
 		},
 		];
 	}
