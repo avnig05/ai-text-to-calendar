@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { GeistSans, GeistMono } from "geist/font"
 import "./globals.css"
+import { PostHogAnalytics } from "./providers/PostHogProvider"
 
 // Defines metadata for the app.
 export const metadata: Metadata = {
@@ -13,7 +14,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <HtmlWrapper>
       <BodyWrapper className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}>
-        {children}
+        <PostHogAnalytics>
+          {children}
+        </PostHogAnalytics>
       </BodyWrapper>
     </HtmlWrapper>
   )
