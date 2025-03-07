@@ -1,6 +1,6 @@
-# AI Calendar Event Generator
+# Calendarize - An AI Calendar Event Generator
 
-Tool that turns plain text or images into calendar events for easy importing to Google Calendar or any other calendar
+Calendarize is a tool designed to help you generate calendar events from images or text. It uses the OpenAI api to extract the relevant event details and then generates a calendar event for you that can be easily imported to most calendar applications.
 
 ## How to run the Calendar Event Generator
 
@@ -24,16 +24,16 @@ now you should be able to navigate to `http://localhost:3000/` in your web brows
 
 Make sure you install all the requirements you can do this by running `bash setup.sh` in the terminal
 
-Alternatively you can install the requirements manually by pip installing the requirements in the `requirements.txt` file and copying/changing `./src/event_generation/config/.env.example` to `./src/event_generation/config/.env` and replace the placeholder with your OpenAI API key
+Alternatively you can install the requirements manually by pip installing the requirements in via the commnad: `pip install -r ./src/backend/requirements.txt`
 
-for easy testing you can run the CLI script by CDing into `./ai-text-to-calendar/src/backend/` and running `python -m event_generation.testing.test_to_cal_cli`
+for easy testing you can run the CLI script by CDing into `./src/backend/` and running `python -m event_generation.testing.test_to_cal_cli`
 
 - pass in a path to an image e.g: `./src/backend/event_generation/testing/single_event.png` in which case `image_parser.py` will be called to scrape the image into a text prompt before calling `text_parser.py`
 
 - or you can directly type your event prompt in which case just `text_parser.py` will be called and will output a `Event` object with the relevant details and links
 
-you can also edit `test_to_cal_cli.py` and change the **genIcal** flag to true, so it outputs a file in .ical format
+you can also edit `test_to_cal_cli.py` and change the **genIcal** flag to true, so that it outputs a file in .ical format
 
 ## Future Improvements
 
-- connect to google login for automatic import
+- allow editing the event after generation
