@@ -1,10 +1,6 @@
-<div style="text-align: center;">
+# Calendarize - AI Calendar Event Generator
 
 ![icon](src/frontend/app/favicon.ico)
-
-</div>
-
-# Calendarize - AI Calendar Event Generator
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://calendarize.ratcliff.cc)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -18,7 +14,6 @@ Calendarize is an AI-powered tool designed to generate calendar events from imag
 - [Installation](#installation)
 - [Usage](#usage)
 - [Command-Line Interface](#command-line-interface)
-- [Running the Application](#running-the-application)
 - [Future Improvements](#future-improvements)
 
 ## Installation
@@ -45,9 +40,7 @@ bash runlocal.sh
 
 Once the application is running, open your web browser and navigate to:
 
-```
-http://localhost:3000/
-```
+`http://localhost:3000/`
 
 This will allow you to interact with the event converter.
 
@@ -69,7 +62,7 @@ python -m event_generation.testing.test_to_cal_cli
 
 To generate an ICS file, modify the `genIcal` flag in `test_to_cal_cli.py` to `true`.
 
-## Running the Application as a CLI
+### Running the Application as a CLI
 
 Ensure all dependencies are installed before running the CLI. The CLI script outputs an `Event` object that includes all event details and calendar links, facilitating easy import into your preferred calendar application.
 
