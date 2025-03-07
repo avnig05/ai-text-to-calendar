@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel, Field
 import event_generation.event.date_parser as dp
-from icalendar import Event as IcalEvent  # vRecur
+from icalendar import Event as IcalEvent, Calendar  # vRecur
 from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
@@ -32,15 +32,29 @@ class Event(BaseModel):
     gcal_link: Optional[str] = None
     outlook_link: Optional[str] = None
     yahoo_link: Optional[str] = None
+    ics: Optional[str] = None
 
-    def write_to_icalevent(self, calendar):
-        cal = calendar
+    def set_ical_string(self):
+        cal = Calendar()
         event = IcalEvent()  # Create an event object
+
+        # Title
         event.add("summary", self.title)
-        event.add("dtstart", self.get_start_time())
-        event.add("dtend", self.get_end_time())
+
+        # Start and end times
+        dtstart = self.start_time if self.start_time.tzinfo else self.start_time.replace(tzinfo=ZoneInfo(self.time_zone))
+        dtend = self.end_time if self.end_time.tzinfo else self.end_time.replace(tzinfo=ZoneInfo(self.time_zone))
+        event.add("dtstart", dtstart)
+        event.add("dtend", dtend)
+        # event.add("dtstart", self.get_start_time())
+        # event.add("dtend", self.get_end_time())
+
+        # time file creation time stamp
         event.add("dtstamp", datetime.now())
+
+        # Other optional fields:
         event.add("location", self.location if self.location else "No Location")
+
         if self.description:
             event.add("description", self.description)
         # Ensure a globally unique event ID
@@ -56,8 +70,16 @@ class Event(BaseModel):
         if rrule:
             event["RRULE"] = rrule
 
+        # Generate Google Calendar link with all details and add as URL property
+        self.set_gcal_link()
+        if self.gcal_link:
+            event.add("url", self.gcal_link)
+
         # Add the event to the calendar
         cal.add_component(event)
+
+        ical_str = cal.to_ical().decode('utf-8')
+        self.ics = ical_str
 
     def set_gcal_link(self):
         # parsed_event.write_to_icalevent("test.ics")
@@ -185,5 +207,7 @@ class Event(BaseModel):
             event_str += f"Outlook Calendar Link: {self.outlook_link}\n\n"
         if self.yahoo_link:
             event_str += f"Yahoo Calendar Link: {self.yahoo_link}\n\n"
+        if self.ics:
+            event_str += f"iCal String: {self.ics}\n\n"
 
         return event_str

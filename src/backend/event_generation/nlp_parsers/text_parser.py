@@ -237,8 +237,6 @@ class TextToEventParser:
                         else None
                     ),
                 )
-                new_event.set_gcal_link()
-                new_event.set_outlook_link()
                 event_list.append(new_event)
 
         # Catch any errors gracefully
