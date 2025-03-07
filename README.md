@@ -1,6 +1,6 @@
-# AI Calendar Event Generator
+# Calendarize - An AI Calendar Event Generator
 
-Tool that turns plain text or images into calendar events for easy importing to Google Calendar or any other calendar
+Calendarize is a tool designed to help you generate calendar events from images or text. It uses the OpenAI api to extract the relevant event details and then generates a calendar event for you that can be easily imported to most calendar applications.
 
 ## How to run the Calendar Event Generator
 

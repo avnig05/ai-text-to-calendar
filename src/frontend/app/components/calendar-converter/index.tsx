@@ -4,17 +4,17 @@ import React, {
   useState,
   useRef,
   useCallback,
-  DragEvent,
+  useEffect,
   ChangeEvent,
+  DragEvent,
   KeyboardEvent,
-  ClipboardEvent,
 } from "react";
 import Image from "next/image";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/app/components/ui/card";
 import { GeneratedEventDisplay } from "./generated-event";
 import { CalendarEvent } from "@/app/types/CalendarEvent";
-import { generateEventFromText, generateEventFromImage } from "@/app/utils/eventGenerator";
+import { generateEvent } from "@/app/utils/eventGenerator";
 import mammoth from "mammoth";
 
 /**
@@ -37,12 +37,14 @@ export function CalendarConverter() {
     setButtonLabel("Converting...");
     try {
       let events: CalendarEvent[] = [];
+      // events = await generateEvent(text, file);
       if (file && file.type.startsWith("image/")) {
-        events = await generateEventFromImage(file);
+        events = await generateEvent(text, file);
       } else {
         // Includes .docx and .txt, or no file at all
-        events = await generateEventFromText(text);
+        events = await generateEvent(text);
       }
+      
       setGeneratedEvents(events);
     } catch (error) {
       console.error("Error generating event:", error);
@@ -86,8 +88,7 @@ export function CalendarConverter() {
       // Read text if it's .txt or .docx
       if (
         uploadedFile.type === "text/plain" ||
-        uploadedFile.type ===
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        uploadedFile.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
       ) {
         await readTextFromFile(uploadedFile);
       }
@@ -136,13 +137,15 @@ export function CalendarConverter() {
     [handleFile]
   );
 
-  const handlePaste = useCallback((event: ClipboardEvent<HTMLDivElement>) => {
-    console.log("Pasting...");
+  /**
+   * Local paste handler (if you want to keep the onPaste on FileUploadZone)
+   */
+  const handlePaste = useCallback((event: React.ClipboardEvent<HTMLDivElement>) => {
+    console.log("Pasting in FileUploadZone...");
     const clipboardItems = event.clipboardData?.items;
     if (!clipboardItems) return;
 
     const items = Array.from(clipboardItems);
-  
     for (const item of items) {
       if (item.type.startsWith("image/")) {
         const file = item.getAsFile();
@@ -154,17 +157,43 @@ export function CalendarConverter() {
     }
   }, [handleFile]);
 
+  /**
+   * Global paste listener to capture pasted images anywhere on the page.
+   */
+  useEffect(() => {
+    const handleGlobalPaste = (event: ClipboardEvent) => {
+      console.log("Global paste detected...");
+      const clipboardItems = event.clipboardData?.items;
+      if (!clipboardItems) return;
+
+      const items = Array.from(clipboardItems);
+      for (const item of items) {
+        if (item.type.startsWith("image/")) {
+          const file = item.getAsFile();
+          if (file) {
+            handleFile(file);
+          }
+          break; // Process only the first image
+        }
+      }
+    };
+
+    document.addEventListener("paste", handleGlobalPaste);
+    return () => {
+      document.removeEventListener("paste", handleGlobalPaste);
+    };
+  }, [handleFile]);
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter") {
       if (e.shiftKey) {
         // Shift + Enter: Insert a new line
-        e.preventDefault(); // Prevent default Enter behavior
-        setText((prev) => prev + "\n"); // Append new line to text
+        e.preventDefault();
+        setText((prev) => prev + "\n");
       } else {
         // Enter: Submit the form
-        e.preventDefault(); // Prevent line break
-        handleConvert(); // Call your submit function
+        e.preventDefault();
+        handleConvert();
       }
     }
   };
@@ -199,7 +228,7 @@ export function CalendarConverter() {
             onClick={() => fileInputRef.current?.click()}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
-            onPaste={handlePaste}
+            onPaste={handlePaste} // Still attached locally if needed
             fileURL={fileURL}
           />
           <div className="relative">
@@ -208,10 +237,7 @@ export function CalendarConverter() {
               value={text}
               onChange={handleTextareaChange}
               onKeyDown={handleKeyDown}
-              className="min-h-[100px] text-telegraf border-2 border-[#A5C3C2] focus:border-[#218F98] 
-                        bg-white/95 placeholder:text-[#6B909F] text-[#071E37] 
-                        w-full rounded-lg max-h-40 overflow-y-auto
-                        p-2"
+              className="min-h-[100px] text-telegraf border-2 border-[#A5C3C2] focus:border-[#218F98] bg-white/95 placeholder:text-[#6B909F] text-[#071E37] w-full rounded-lg max-h-40 overflow-y-auto p-2"
             />
           </div>
           <Button
@@ -225,15 +251,14 @@ export function CalendarConverter() {
 
       {generatedEvents.length > 0 && (
         <div className="space-y-6 w-full">
-        {generatedEvents.map((event, index) => (
-          <Card key={index} className="w-full border-[#218F98] bg-white/95 shadow-sm relative">
-          <Sparkle position="right" />
-          <GeneratedEventDisplay event={event} />
-          </Card>
-        ))}
+          {generatedEvents.map((event, index) => (
+            <Card key={index} className="w-full border-[#218F98] bg-white/95 shadow-sm relative">
+              <Sparkle position="right" />
+              <GeneratedEventDisplay event={event} />
+            </Card>
+          ))}
         </div>
       )}
-
     </Container>
   );
 }
@@ -331,7 +356,6 @@ function FileUploadZone({ onClick, onDragOver, onDrop, onPaste, fileURL }: FileU
         {fileURL && (
           <div className="mt-4 w-full max-w-lg mx-auto border-2 border-[#218F98] rounded-lg overflow-hidden bg-white/95 shadow-md">
             <div className="relative w-full h-0 pb-[75%] p-2">
-              {/* next/image preview for images; docx/txt won't preview actual content */}
               <div className="absolute inset-0 m-2 border-2 border-[#A5C3C2] rounded-lg overflow-hidden flex items-center justify-center">
                 <Image
                   src={fileURL}
