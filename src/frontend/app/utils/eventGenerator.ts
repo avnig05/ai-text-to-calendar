@@ -1,7 +1,8 @@
 import { CalendarEvent } from "@/app/types/CalendarEvent";
 
 // Use environment variable with fallback
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.calendarize.ratcliff.cc';
+// const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.calendarize.ratcliff.cc';
+const API_BASE_URL = 'https://api.calendarize.ratcliff.cc';
 const API_EVENT = API_BASE_URL + "/add-to-calendar";
 const API_UPLOAD = API_BASE_URL + "/upload";
 // Function to generate an event from text input
