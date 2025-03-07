@@ -1,12 +1,10 @@
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, Form
 import shutil
 from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from event_generation.nlp_parsers.text_parser import TextToEventParser
 from event_generation.nlp_parsers.image_parser import ImageToTextParser
-from fastapi.responses import JSONResponse
-import datetime
 # from icalendar import Calendar
 # from event_generation.event.event import Event
 
@@ -21,15 +19,6 @@ app = FastAPI()
 UPLOAD_FOLDER = Path("uploads")
 UPLOAD_FOLDER.mkdir(exist_ok=True)
 
-
-@app.get("/current-year")
-def get_current_year():
-    return {"year": datetime.datetime.utcnow().year}
-
-
-@app.head("/")
-async def health_check():
-    return JSONResponse(content={"status": "ok"})
 
 app.add_middleware(
     CORSMiddleware,
@@ -57,7 +46,11 @@ async def add_to_calendar(item: CalendarRequest):
 
 
 @app.post("/upload")
-async def upload(file: UploadFile = File(...)):
+async def upload(
+                file: UploadFile = File(...),
+                local_time: str = Form(...),
+                local_tz: str = Form(...)
+                ):
     file_path = UPLOAD_FOLDER / file.filename
 
     with file_path.open("wb") as buffer:
@@ -68,7 +61,7 @@ async def upload(file: UploadFile = File(...)):
     res = " ".join(parser.parse_image(file_path))
 
     parser = TextToEventParser()
-    event = parser.parse_text(res)
+    event = parser.parse_text(res, local_time, local_tz)
 
     try:
         file_path.unlink()
