@@ -56,8 +56,10 @@ class TextToEventParser:
                         - 24:00 is not a valid time always default to use 23:59 instead.
                         - **If there appear to be multiple events in the text, extract all of them into separate events. But maintain details that apply to multiple events.**
                         - **If an image is passed in the request, inperpet the image and extract all the details that would be important to the event as well as an exact description and use it to generate an event**
-                        - **If an image is passed in the request and a custom text is passed as well use the text to inform any modifications to the event that are requested, the image should still be the main source**
                         - It's possible that an image wont have very clear text or might have a wierd format (a screenshot of google calendar for example) do your best to extract the information.
+                        -**If Image is passed along with text, unless there is context that shows the text is "edititng" the image, assume the text is in addition to the image and not a replacement for it.**
+                        - if the text appears to be editing the image, make the event first, and then understand the context and use the text to update the event parsed from the image.
+                        - if the text appears to be editing the image but only one of the events in the image is being edited, only update that event, but still return all the events from the image.
 
                         Extract and return in JSON format:
                         - title: str **a title is required never leave it null**
@@ -91,10 +93,10 @@ class TextToEventParser:
                             -- if names are provided without email addresses, include the names in the description. but leave the attendees list empty.
                         - is_recurring: bool
                             -- if the event is recurring, set this to true. and provide the recurrence pattern
-                            -- if the recurrence is not specified, assume it's a one-time event and set is_reccuring to false.
+                            -- if the recurrence is not specified, assume it's a one-time event and set is_recurring to false.
                         - recurrence_pattern: Optional[str]
                             -- if the event is recurring, provide the recurrence pattern. otherwise, leave it null
-                            -- try to imply the reccurence pattern from the text. if it is not clear, default to WEEKLY. Use context if the event is something like a bithday or holiday.
+                            -- try to imply the recurrence pattern from the text. if it is not clear, default to WEEKLY. Use context if the event is something like a bithday or holiday.
                             -- if the event happens on multiple days in a row mark is as daily.
                             -- if it skips days or repeats weekly and/or includes multiple days of the week, mark it as weekly.
                             -- if the event happens monthly or yearly mark it as monthly or yearly.
@@ -103,7 +105,7 @@ class TextToEventParser:
                                 ---DAILY, WEEKLY, MONTHLY, YEARLY
                         -recurrence_days: Optional[List[str]]
                             -- if the event is recurring, provide the days of the week it occurs on as a list. otherwise, leave it null.
-                            -- reccurance_days should only be in the following formats:
+                            -- recurrance_days should only be in the following formats:
                                 --MO, TU, WE, TH, FR, SA, SU
                         -recurrence_count: Optional[int]
                             -- if the event is recurring, try to tell if the user specifies the number of recurrences or the end date, if the number of recurrences is specified, provide it. otherwise, leave it null.
