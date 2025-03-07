@@ -1,39 +1,84 @@
-# Calendarize - An AI Calendar Event Generator
+<div style="text-align: center;">
 
-Calendarize is a tool designed to help you generate calendar events from images or text. It uses the OpenAI api to extract the relevant event details and then generates a calendar event for you that can be easily imported to most calendar applications.
+![icon](src/frontend/app/favicon.ico)
 
-## How to run the Calendar Event Generator
+</div>
 
-There are two bash scripts that will run the application locally you. The first script will install all the necessary dependencies and the second script will start the application.
+# Calendarize - AI Calendar Event Generator
 
-First run the following command in the terminal to install all the necessary dependencies:
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://calendarize.ratcliff.cc)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+Calendarize is an AI-powered tool designed to generate calendar events from images or text. Utilizing the OpenAI API, Calendarize extracts relevant event details and creates calendar events that are compatible with most calendar applications.
+
+---
+
+## Table of Contents
+
+- [Installation](#installation)
+- [Usage](#usage)
+- [Command-Line Interface](#command-line-interface)
+- [Running the Application](#running-the-application)
+- [Future Improvements](#future-improvements)
+
+## Installation
+
+To install the necessary dependencies, run the following command in your terminal:
 
 ```bash
 bash setup.sh
 ```
 
-then run the following command to start the application on local host:
+Alternatively, for the backend requirements, run:
+
+```bash
+pip install -r ./src/backend/requirements.txt
+```
+
+## Usage
+
+After installation, start the application locally by running:
 
 ```bash
 bash runlocal.sh
 ```
 
-now you should be able to navigate to `http://localhost:3000/` in your web browser to interact with the converter
+Once the application is running, open your web browser and navigate to:
 
-## How to run the calendar converter as a CLI
+```
+http://localhost:3000/
+```
 
-Make sure you install all the requirements you can do this by running `bash setup.sh` in the terminal
+This will allow you to interact with the event converter.
 
-Alternatively you can install the requirements manually by pip installing the requirements in via the commnad: `pip install -r ./src/backend/requirements.txt`
+## Command-Line Interface
 
-for easy testing you can run the CLI script by CDing into `./src/backend/` and running `python -m event_generation.testing.test_to_cal_cli`
+Calendarize also provides a CLI for generating calendar events. To test the CLI, navigate to the backend directory and run:
 
-- pass in a path to an image e.g: `./src/backend/event_generation/testing/single_event.png` in which case `image_parser.py` will be called to scrape the image into a text prompt before calling `text_parser.py`
+```bash
+python -m event_generation.testing.test_to_cal_cli
+```
 
-- or you can directly type your event prompt in which case just `text_parser.py` will be called and will output a `Event` object with the relevant details and links
+### CLI Options
 
-you can also edit `test_to_cal_cli.py` and change the **genIcal** flag to true, so that it outputs a file in .ical format
+- **Image Input**:
+  - Provide the path to an image file (e.g., `./src/backend/event_generation/testing/single_event.png`). In this mode, `image_parser.py` processes the image to extract text before invoking `text_parser.py`.
+
+- **Text Input**:
+  - Enter your event prompt directly. In this mode, `text_parser.py` is used to generate an `Event` object with all relevant details and links.
+
+To generate an ICS file, modify the `genIcal` flag in `test_to_cal_cli.py` to `true`.
+
+## Running the Application as a CLI
+
+Ensure all dependencies are installed before running the CLI. The CLI script outputs an `Event` object that includes all event details and calendar links, facilitating easy import into your preferred calendar application.
 
 ## Future Improvements
 
-- allow editing the event after generation
+- Enable post-generation editing of events
+- Integrate additional calendar services
+- Enhance error handling and improve the user interface
+
+---
+
+For further assistance or more detailed documentation, please consult the project documentation or contact the development team.
