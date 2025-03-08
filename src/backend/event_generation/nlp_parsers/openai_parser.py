@@ -27,12 +27,12 @@ def encode_image(image_path):
         return base64.b64encode(image_file.read()).decode("utf-8")
 
 
-class TextToEventParser:
+class OpenAiParser:
     def __init__(self):
         # Initialize OpenAI client with API key
         self.client = OpenAI(api_key=get_openai_key())
 
-    def parse_text(self, text: str, local_time: str, local_tz: str, image_path=None) -> Event:
+    def parse(self, text: str, local_time: str, local_tz: str, image_path=None) -> Event:
         # send request to OpenAI API to extract event details into a JSON object
         try:
             # get current time up to the minute for relative date calculations
