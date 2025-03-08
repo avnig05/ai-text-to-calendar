@@ -3,7 +3,8 @@ import shutil
 from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
-from event_generation.nlp_parsers.text_parser import TextToEventParser
+# from backend.event_generation.nlp_parsers.openai_parser import OpenAiParser
+from event_generation.nlp_parsers.gemini_parser import GeminiParser
 
 
 app = FastAPI()
@@ -48,9 +49,9 @@ async def convert(
     if text is None:
         text = ""
 
-    parser = TextToEventParser()
+    parser = GeminiParser()
     # Pass file_path (or None) to the parser
-    event_list = parser.parse_text(text, local_time, local_tz, file_path)
+    event_list = parser.parse(text, local_time, local_tz, file_path)
 
     # Clean up the uploaded file
     if file_path is not None:

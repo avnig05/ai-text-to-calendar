@@ -137,13 +137,25 @@ export function GeneratedEventDisplay({ event }: { event: CalendarEvent }): JSX.
   };
 
   return (
-    <Card className="w-full border-[#218F98] bg-white/95 shadow-sm">
-      <CardHeader>
-        <CardTitle className="text-[#071E37] heading-signika text-xl">
+    <Card className="w-full h-full
+      md:border-[#218F98] 
+      relative
+      border-0
+      md:border-2
+      bg-white
+      md:bg-white/95
+      shadow-none
+      md:shadow-sm
+    ">
+      <CardHeader className="px-4 md:px-8 pt-4 md:pt-6">
+        <CardTitle className="text-[#071E37] heading-signika 
+          text-lg 
+          md:text-xl"
+        >
           Generated Event
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4 md:space-y-6 px-4 md:px-8">
         {/* Mobile View */}
         <div className="md:hidden space-y-3">
           <EventDetails
@@ -233,13 +245,13 @@ const EventDetails: React.FC<{
   description: string;
 }> = React.memo(({ title, dateTime, description }) => (
   <div className="space-y-2">
-    <p className={`text-lg font-medium text-telegraf text-[${CONFIG.COLORS.TEXT_PRIMARY}]`}>
+    <p className="text-base md:text-lg font-medium text-telegraf text-[#071E37]">
       {title}
     </p>
-    <p className={`text-sm text-telegraf text-[${CONFIG.COLORS.TEXT_SECONDARY}]`}>
+    <p className="text-sm md:text-base text-telegraf text-[#6B909F]">
       {dateTime}
     </p>
-    <p className={`text-sm text-telegraf text-[${CONFIG.COLORS.TEXT_SECONDARY}]`}>
+    <p className="text-sm md:text-base text-telegraf text-[#6B909F]">
       {description}
     </p>
   </div>
@@ -248,25 +260,31 @@ EventDetails.displayName = 'EventDetails';
 
 // Export Sections
 const MobileExportSection: React.FC<{ event: CalendarEvent }> = React.memo(({ event }) => (
-  <div className="space-y-2">
-    <p className={`text-[${CONFIG.COLORS.TEXT_SECONDARY}] ${CONFIG.TEXT_SIZES.MOBILE.LABEL} text-telegraf`}>
+  <div className="space-y-2 w-full">
+    <p className="text-[#6B909F] text-sm font-medium text-telegraf">
       Export to:
     </p>
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 w-full">
       <ExportButton 
         label="Google" 
         onClick={() => exportToGoogleCalendar(event)}
-        className={CONFIG.TEXT_SIZES.MOBILE.BUTTON}
+        className="text-[11px] xs:text-sm sm:text-base md:text-lg lg:text-xl
+          py-2 xs:py-2.5 sm:py-3
+          w-full"
       />
       <ExportButton 
         label="Outlook" 
         onClick={() => exportToOutlook(event)}
-        className={CONFIG.TEXT_SIZES.MOBILE.BUTTON}
+        className="text-[11px] xs:text-sm sm:text-base md:text-lg lg:text-xl
+          py-2 xs:py-2.5 sm:py-3
+          w-full"
       />
       <ExportButton 
         label="Apple (ICS)"
         onClick={() => exportToICal(event)}
-        className={CONFIG.TEXT_SIZES.MOBILE.BUTTON}
+        className="text-[11px] xs:text-sm sm:text-base md:text-lg lg:text-xl
+          py-2 xs:py-2.5 sm:py-3
+          w-full"
       />
     </div>
   </div>
@@ -275,25 +293,28 @@ MobileExportSection.displayName = 'MobileExportSection';
 
 // Desktop Export Section
 const DesktopExportSection: React.FC<{ event: CalendarEvent }> = React.memo(({ event }) => (
-  <div className="space-y-2">
-    <p className={`text-[${CONFIG.COLORS.TEXT_SECONDARY}] ${CONFIG.TEXT_SIZES.DESKTOP.LABEL} text-telegraf`}>
+  <div className="space-y-2 w-full">
+    <p className="text-[#6B909F] text-sm font-medium text-telegraf">
       Export to:
     </p>
-    <div className="grid grid-cols-3 gap-1 xs:gap-2">
+    <div className="grid grid-cols-3 gap-1 xs:gap-2 w-full">
       <ExportButton 
         label="Google" 
         onClick={() => exportToGoogleCalendar(event)}
-        className={CONFIG.TEXT_SIZES.DESKTOP.BUTTON}
+        className="text-[11px] xs:text-sm sm:text-base md:text-lg lg:text-xl
+          py-2 xs:py-2.5 sm:py-3"
       />
       <ExportButton 
         label="Outlook" 
         onClick={() => exportToOutlook(event)}
-        className={CONFIG.TEXT_SIZES.DESKTOP.BUTTON}
+        className="text-[11px] xs:text-sm sm:text-base md:text-lg lg:text-xl
+          py-2 xs:py-2.5 sm:py-3"
       />
       <ExportButton 
         label="Apple (ICS)"
         onClick={() => exportToICal(event)}
-        className={CONFIG.TEXT_SIZES.DESKTOP.BUTTON}
+        className="text-[11px] xs:text-sm sm:text-base md:text-lg lg:text-xl
+          py-2 xs:py-2.5 sm:py-3"
       />
     </div>
   </div>
