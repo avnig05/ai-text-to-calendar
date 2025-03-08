@@ -36,3 +36,14 @@ def get_gemini_key():
             "GEMINI_API_KEY set."
         )
     return api_key
+
+
+def get_model():
+    load_environment()
+    model = os.getenv("MODEL")
+    if not model:
+        raise ValueError(
+            "Model not found. Make sure you have a .env file with "
+            "MODEL set."
+        )
+    return model
